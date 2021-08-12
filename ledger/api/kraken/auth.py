@@ -16,7 +16,7 @@
 from ledger.api.factory import __agent__
 from ledger.api.factory import __source__
 from ledger.api.factory import __version__
-from ledger.api.factory import AbstractToken
+
 from ledger.api.factory import AbstractAuth
 from ledger.api.factory import AbstractQuery
 
@@ -27,88 +27,27 @@ import urllib
 import time
 
 
-def get_timestamp() -> str:
-    return str(int(1000 * time.time()))
-
-
-class Token(AbstractToken):
-    def __init__(self, key: str, secret: str, passphrase: str = None):
+class Auth(AbstractAuth):
+    def __init__(self, key: str, secret: str):
         self.__key = key
         self.__secret = secret
-        self.__passphrase = passphrase
-
-    @property
-    def key(self) -> str:
-        return self.__key
-
-    @property
-    def secret(self) -> str:
-        return self.__secret
-
-    @property
-    def passphrase(self) -> str:
-        return self.__passphrase
-
-    @property
-    def data(self) -> dict:
-        return {
-            'key': self.key,
-            'secret': self.secret
-        }
-
-
-class Proxy(object):
-    def __init__(self, query: AbstractQuery, token: AbstractToken):
-        self.__query = query
-        self.__token = token
-        self.__timestamp = get_timestamp()
-
-    @property
-    def query(self) -> AbstractQuery:
-        return self.__query
-
-    @property
-    def token(self) -> AbstractToken:
-        return self.__token
-
-    @property
-    def timestamp(self) -> str:
-        return self.__timestamp
-
-    @property
-    def message(self) -> bytes:
-        post = urllib.parse.urlencode(self.query.data)
-        encoded = (str(self.query.data['nonce']) + post).encode()
-        return self.query.endpoint.encode() + hashlib.sha256(encoded).digest()
-
-    @property
-    def b64signature(self) -> bytes:
-        message = self.message
-        secret = base64.b64decode(self.token.secret)
-        signature = hmac.new(secret, message, hashlib.sha512)
-        b64signature = base64.b64encode(signature.digest())
-        return b64signature.decode()
-
-    @property
-    def headers(self) -> dict:
-        return {
-            'User-Agent': f'{__agent__}/{__version__} {__source__}',
-            'API-Key': self.token.key,
-            'API-Sign': self.b64signature,
-        }
-
-
-class Auth(AbstractAuth):
-    def __init__(self, key: str, secret: str, passphrase: str = None):
-        self.__token = Token(key, secret, passphrase)
-
-    def __call__(self, query: AbstractQuery) -> dict:
-        return Proxy(query, self.token).headers
-
-    @property
-    def token(self) -> Token:
-        return self.__token
 
     @property
     def nonce(self) -> str:
-        return get_timestamp()
+        return str(int(1000 * time.time()))
+
+    def signature(self, query: AbstractQuery) -> bytes:
+        key = base64.b64decode(self.__secret)
+        post = urllib.parse.urlencode(query.data)
+        encoded = (str(query.data['nonce']) + post).encode()
+        message = query.endpoint.encode() + hashlib.sha256(encoded).digest()
+        mac = hmac.new(key, message, hashlib.sha512)
+        signature = base64.b64encode(mac.digest())
+        return signature.decode()
+
+    def headers(self, query: AbstractQuery) -> dict:
+        return {
+            'User-Agent': f'{__agent__}/{__version__} {__source__}',
+            'API-Key': self.__key,
+            'API-Sign': self.signature(query)
+        }

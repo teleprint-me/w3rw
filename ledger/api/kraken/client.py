@@ -13,6 +13,7 @@
 #
 # You should have received a copy of the GNU Affero General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
+from ledger.api.factory import Dict
 from ledger.api.factory import AbstractMessenger
 from ledger.api.factory import AbstractClient
 from ledger.api.factory import AbstractFactory
@@ -27,52 +28,11 @@ from ledger.api.kraken.context import AccountsContext
 from ledger.api.kraken.context import HistoryContext
 from ledger.api.kraken.context import TransfersContext
 from ledger.api.kraken.context import PriceContext
-from ledger.api.kraken.context import OrderContext
-
-from datetime import datetime
-
-
-def on_error(response: object) -> bool:
-    return bool(response.get('error'))
+from ledger.api.kraken.context import AddOrderContext
+from ledger.api.kraken.context import QueryOrderContext
 
 
-def epoch_to_datetime(timestamp: float) -> str:
-    '''convert timestamp from epoch to iso 8601'''
-    date = datetime.fromtimestamp(timestamp)
-    return date.isoformat()
-
-
-def get_average_price(prices: list) -> str:
-    '''return average price based on approx bids and asks at market value'''
-    pricelist = sum(float(p) for p in prices) / len(prices)
-    return f'{pricelist:.5f}'
-
-
-def get_history(product_id: str, response: object) -> object:
-    for trade in response['result']['trades'].values():
-        if trade['pair'] == product_id:
-            yield {
-                'id': trade['pair'],
-                'side': trade['type'],
-                'price': trade['price'],
-                'size': trade['vol'],
-                'timestamp': epoch_to_datetime(trade['time'])
-            }
-
-
-def get_transfers(product_id: str, response: object) -> object:
-    for transfer in response['result']['ledger'].values():
-        if transfer['asset'] == product_id.split('Z')[0]:
-            yield {
-                'type': transfer['type'],
-                'currency': transfer['asset'],
-                'amount': transfer['amount'],
-                'fee': transfer['fee'],
-                'timestamp': epoch_to_datetime(transfer['time'])
-            }
-
-
-class KrakenClient(AbstractClient):
+class Client(AbstractClient):
     def __init__(self, messenger: AbstractMessenger):
         self.__name = 'kraken'
         self.__messenger = messenger
@@ -85,70 +45,53 @@ class KrakenClient(AbstractClient):
     def messenger(self) -> AbstractMessenger:
         return self.__messenger
 
-    def products(self) -> list:
+    def products(self) -> Dict:
         query = Query('/public/AssetPairs')
-        context = ProductsContext(query, self.messenger)
+        response = self.messenger.get(query)
+        context = ProductsContext(response)
         return context.data
 
-    def accounts(self) -> list:
+    def accounts(self) -> Dict:
         query = Query('/private/Balance')
-        context = AccountsContext(query, self.messenger)
+        response = self.messenger.post(query)
+        context = AccountsContext(response)
         return context.data
 
-    def history(self, product_id: str) -> list:
+    def history(self, product_id: str) -> Dict:
         query = Query('/private/TradesHistory')
-        query.product_id = product_id
-        query.callback = get_history
-        context = HistoryContext(query, self.messenger)
+        response = self.messenger.page(query)
+        context = HistoryContext(response, product_id)
         return context.data
 
-    def deposits(self, asset: str) -> list:
+    def deposits(self, product_id: str) -> Dict:
         query = Query('/private/Ledgers', {'type': 'deposit'})
-        query.asset = asset
-        query.callback = get_transfers
-        return self.messenger.page(query)
+        response = self.messenger.page(query)
+        context = TransfersContext(response, product_id)
+        return context.data
 
-    def withdrawals(self, asset: str) -> list:
+    def withdrawals(self, product_id: str) -> Dict:
         query = Query('/private/Ledgers', {'type': 'withdrawal'})
-        query.asset = asset
-        query.callback = get_transfers
-        return self.messenger.page(query)
+        response = self.messenger.page(query)
+        context = TransfersContext(response, product_id)
+        return context.data
 
-    def price(self, asset: str) -> dict:
-        response = self.messenger.get('/public/Ticker', {'pair': asset})
-        if self.has_error(response):
-            return response['error']
-        ticker = response['result'][asset]
-        return {
-            'bid': ticker['b'][0],
-            'ask': ticker['a'][0],
-            'price': get_average_price(ticker['p'])
-        }
+    def price(self, product_id: str) -> dict:
+        query = Query('/public/Ticker', {'pair': product_id})
+        response = self.messenger.get(query)
+        context = PriceContext(response, product_id)
+        return context.data
 
     def order(self, data: dict) -> dict:
-        order = self.messenger.post('/private/AddOrder', data)
-        if self.has_error(order):
-            return order['error']
-        txid = order['result']['txid']
-        query = self.messenger.post('/private/QueryOrders', {'txid': txid})
-        if self.has_error(query):
-            return query['error']
-        info = query['result'][txid]
-        return {
-            'id': info['descr']['pair'],
-            'side': info['descr']['type'],
-            'price': info['price'],
-            'size': info['vol'],
-            'timestamp': epoch_to_datetime(info['opentm'])
-        }
+        response = self.messenger.post(Query('/private/AddOrder', data))
+        add_order = AddOrderContext(response)
+        query = Query('/private/QueryOrders', {'txid': add_order.data})
+        response = self.messenger.post(query)
+        query_order = QueryOrderContext(response, add_order.data)
+        return query_order.data
 
 
 class KrakenFactory(AbstractFactory):
-    def get_client(self,
-                   key: str,
-                   secret: str,
-                   passphrase: str = None) -> AbstractClient:
-
-        auth = Auth(key, secret, passphrase)
+    def get_client(self, key: str, secret: str) -> AbstractClient:
+        auth = Auth(key, secret)
         messenger = Messenger(auth)
-        return KrakenClient(messenger)
+        return Client(messenger)

@@ -21,16 +21,18 @@ from ledger.api.factory import AbstractAPI
 from ledger.api.factory import AbstractQuery
 from ledger.api.factory import AbstractMessenger
 
-import requests
+from requests import Session
+from requests import Response
+
+
+import dataclasses
 import time
 
 
+@dataclasses.dataclass
 class Query(AbstractQuery):
-    def __init__(self, endpoint: str, data: dict = None):
-        self.__endpoint = endpoint
-        self.__data = data if data else {}
-        self.__product_id = ''
-        self.__callback = lambda default: None
+    __endpoint: str
+    __data: dict = dataclasses.field(default_factory=dict)
 
     @property
     def endpoint(self) -> str:
@@ -44,31 +46,23 @@ class Query(AbstractQuery):
     def data(self) -> dict:
         return self.__data
 
-    @property
-    def product_id(self) -> str:
-        return self.__product_id
-
-    @product_id.setter
-    def product_id(self, value: str):
-        self.__product_id = value
-
-    @property
-    def callback(self) -> object:
-        return self.__callback
-
-    @callback.setter
-    def callback(self, value: object):
-        self.__callback = value
+    @data.setter
+    def data(self, value: dict):
+        self.__data = value
 
 
+@dataclasses.dataclass
 class API(AbstractAPI):
+    __version: int = 0
+    __url: str = 'https://api.kraken.com'
+
     @property
     def version(self) -> int:
-        return 0
+        return self.__version
 
     @property
     def url(self) -> str:
-        return 'https://api.kraken.com'
+        return self.__url
 
     def endpoint(self, value: str) -> str:
         if value.startswith(f'/{self.version}'):
@@ -80,18 +74,18 @@ class API(AbstractAPI):
 
 
 class Messenger(AbstractMessenger):
-    def __init__(self, auth: AbstractAuth = None) -> None:
-        self.__auth = auth
-        self.__api = API()
-        self.__timeout = 30
-        self.__session = requests.Session()
+    def __init__(self, auth: AbstractAuth):
+        self.__auth: AbstractAuth = auth
+        self.__api: AbstractAPI = API()
+        self.__session: Session = Session()
+        self.__timeout: int = 30
 
     @property
     def auth(self) -> AbstractAuth:
         return self.__auth
 
     @property
-    def api(self) -> API:
+    def api(self) -> AbstractAPI:
         return self.__api
 
     @property
@@ -99,42 +93,43 @@ class Messenger(AbstractMessenger):
         return self.__timeout
 
     @property
-    def session(self) -> requests.Session:
+    def session(self) -> Session:
         return self.__session
 
-    def get(self, query: AbstractQuery) -> requests.Response:
+    def get(self, query: AbstractQuery) -> Response:
         time.sleep(__timeout__)
-        url = self.api.path(query.endpoint)
         query.endpoint = self.api.endpoint(query.endpoint)
         query.data['nonce'] = self.auth.nonce
         return self.session.get(
-            url,
+            self.api.path(query.endpoint),
             params=query.data,
-            headers=self.auth(query),
+            headers=self.auth.headers(query),
             timeout=self.timeout
         )
 
-    def post(self, query: AbstractQuery) -> requests.Response:
+    def post(self, query: AbstractQuery) -> Response:
         time.sleep(__timeout__)
-        url = self.api.path(query.endpoint)
         query.endpoint = self.api.endpoint(query.endpoint)
         query.data['nonce'] = self.auth.nonce
         return self.session.post(
-            url,
+            self.api.path(query.endpoint),
             data=query.data,
-            headers=self.auth(query),
+            headers=self.auth.headers(query),
             timeout=self.timeout
         )
 
-    def page(self, query: AbstractQuery) -> object:
+    def page(self, query: AbstractQuery) -> Response:
+        responses = []
         query.data['ofs'] = 0
         while query.data['ofs'] < __limit__:
             response = self.post(query)
-            if 200 != response.status_code:
-                return response.json()
-            for item in query.callback(query.product_id, response):
-                yield item
+            ok = 200 == response.status_code
+            error = response.json().get('error')
+            if not ok or error:
+                return [response]
+            responses.append(response)
             query.data['ofs'] += __offset__
+        return responses
 
     def close(self) -> None:
         self.session.close()

@@ -15,63 +15,34 @@
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 import abc
 import requests
+import typing
 
 __agent__: str = 'teleprint.me'
 __source__: str = 'https://github.com/teleprint-me/ledger'
-__version__: str = '0.1.0'
+__version__: str = '0.1.3'
+
 __offset__: int = 50
-__limit__: int = 200
+__limit__: int = 250
 __timeout__: float = 0.275
 
-
-class AbstractToken(abc.ABC):
-    def __init__(self, key: str, secret: str, passphrase: str = None):
-        pass
-
-    @abc.abstractproperty
-    def key(self) -> str:
-        pass
-
-    @abc.abstractproperty
-    def secret(self) -> str:
-        pass
-
-    @abc.abstractproperty
-    def passphrase(self) -> str:
-        pass
-
-    @abc.abstractproperty
-    def data(self) -> dict:
-        pass
+List = typing.TypeVar('List', list, list[dict])
+Dict = typing.TypeVar('DList', dict, List)
+Response = typing.TypeVar('Response', requests.Response, list[requests.Response])
 
 
 class AbstractAuth(abc.ABC):
-    def __init__(self, key: str, secret: str, passphrase: str = None):
-        pass
-
-    @abc.abstractproperty
-    def token(self) -> AbstractToken:
+    @abc.abstractmethod
+    def __init__(self, key: str, secret: str):
         pass
 
 
 class AbstractQuery(abc.ABC):
-    def __init__(self, endpoint: str, data: dict = None):
-        pass
-
     @abc.abstractproperty
     def endpoint(self) -> str:
         pass
 
     @abc.abstractproperty
     def data(self) -> dict:
-        pass
-
-    @abc.abstractproperty
-    def id(self) -> str:
-        pass
-
-    @abc.abstractproperty
-    def callback(self) -> object:
         pass
 
 
@@ -98,11 +69,8 @@ class AbstractAPI(abc.ABC):
 
 
 class AbstractMessenger(abc.ABC):
-    def __init__(self, auth: AbstractAuth = None):
-        pass
-
-    @abc.abstractproperty
-    def auth(self) -> AbstractAuth:
+    @abc.abstractmethod
+    def __init__(self, auth: AbstractAuth):
         pass
 
     @abc.abstractproperty
@@ -110,23 +78,27 @@ class AbstractMessenger(abc.ABC):
         pass
 
     @abc.abstractproperty
-    def timeout(self) -> int:
+    def auth(self) -> AbstractAuth:
         pass
 
     @abc.abstractproperty
     def session(self) -> requests.Session:
         pass
 
-    @abc.abstractmethod
-    def get(self, query: AbstractQuery) -> requests.Response:
+    @abc.abstractproperty
+    def timeout(self) -> int:
         pass
 
     @abc.abstractmethod
-    def post(self, query: AbstractQuery) -> requests.Response:
+    def get(self, query: AbstractQuery) -> Response:
         pass
 
     @abc.abstractmethod
-    def page(self, query: AbstractQuery) -> object:
+    def post(self, query: AbstractQuery) -> Response:
+        pass
+
+    @abc.abstractmethod
+    def page(self, query: AbstractQuery) -> Response:
         pass
 
     @abc.abstractmethod
@@ -135,27 +107,28 @@ class AbstractMessenger(abc.ABC):
 
 
 class AbstractContext(abc.ABC):
-    def __init__(self, query: AbstractQuery, messenger: AbstractMessenger):
+    @abc.abstractproperty
+    def response(self) -> Response:
         pass
 
     @abc.abstractproperty
-    def query(self) -> AbstractQuery:
+    def id(self) -> str:
         pass
 
     @abc.abstractmethod
-    def response(self) -> requests.Response:
+    def data(self) -> Dict:
         pass
 
     @abc.abstractmethod
     def error(self) -> bool:
         pass
 
-    @abc.abstractmethod
-    def data(self) -> object:
-        pass
-
 
 class AbstractClient(abc.ABC):
+    @abc.abstractmethod
+    def __init__(self, messenger: AbstractMessenger):
+        pass
+
     @abc.abstractproperty
     def name(self) -> str:
         pass
@@ -165,23 +138,23 @@ class AbstractClient(abc.ABC):
         pass
 
     @abc.abstractmethod
-    def products(self) -> list:
+    def products(self) -> Dict:
         pass
 
     @abc.abstractmethod
-    def accounts(self) -> list:
+    def accounts(self) -> Dict:
         pass
 
     @abc.abstractmethod
-    def history(self, product_id: str) -> list:
+    def history(self, product_id: str) -> Dict:
         pass
 
     @abc.abstractmethod
-    def deposits(self, product_id: str) -> list:
+    def deposits(self, product_id: str) -> Dict:
         pass
 
     @abc.abstractmethod
-    def withdrawals(self, product_id: str) -> list:
+    def withdrawals(self, product_id: str) -> Dict:
         pass
 
     @abc.abstractmethod

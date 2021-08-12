@@ -13,53 +13,69 @@
 #
 # You should have received a copy of the GNU Affero General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
-from ledger.api.factory import AbstractQuery
-from ledger.api.factory import AbstractMessenger
 from ledger.api.factory import AbstractContext
+from ledger.api.factory import Response
+from ledger.api.factory import List
 
+import dataclasses
+import datetime
 import requests
 
 
-class GetContext(AbstractContext):
-    def __init__(self, query: AbstractQuery, messenger: AbstractMessenger):
-        self.__query = query
-        self.__response = messenger.get(query)
+def epoch_to_datetime(timestamp: float) -> str:
+    '''convert timestamp from epoch to iso 8601'''
+    date = datetime.datetime.fromtimestamp(timestamp)
+    return date.isoformat()
+
+
+@dataclasses.dataclass
+class Context(AbstractContext):
+    __response: Response
+    __id: str = None
 
     @property
-    def query(self) -> AbstractQuery:
-        return self.__query
-
-    @property
-    def response(self) -> requests.Response:
+    def response(self) -> Response:
         return self.__response
 
+    @response.setter
+    def response(self, value: Response):
+        self.__response = value
+
     @property
+    def id(self) -> str:
+        return self.__id
+
+    @id.setter
+    def id(self, value: str):
+        self.__id = value
+
     def error(self) -> bool:
-        return self.response.status_code != 200 \
-            or 'error' in self.response.json()
+        return bool(self.response.json()['error'])
+
+
+class PageContext(Context):
+    def error(self, response: requests.Response) -> bool:
+        ok = 200 == response.status_code
+        error = bool(response.json()['error'])
+        return not ok or error
 
     @property
-    def data(self) -> object:
-        return None
+    def data(self) -> List:
+        collection = []
+        for response in self.response:
+            data = response.json()
+            if self.error(response):
+                return [data]
+            for result in self.get(data):
+                collection.append(result)
+        return collection
 
 
-class PostContext(GetContext):
-    def __init__(self, query: AbstractQuery, messenger: AbstractMessenger):
-        self.__query = query
-        self.__response = messenger.post(query)
-
-
-class PageContext(GetContext):
-    def __init__(self, query: AbstractQuery, messenger: AbstractMessenger):
-        self.__query = query
-        self.__response = messenger.page(query)
-
-
-class ProductsContext(GetContext):
+class ProductsContext(Context):
     @property
-    def data(self) -> list:
+    def data(self) -> List:
         response = self.response.json()
-        return response['error'] if self.error else [
+        return [response] if self.error() else [
             {'id': k,
              'display': v.get('wsname'),
              'name': v.get('base'),
@@ -67,111 +83,68 @@ class ProductsContext(GetContext):
              } for k, v in response['result'].items()]
 
 
-class AccountsContext(GetContext):
+class AccountsContext(Context):
     @property
-    def data(self) -> list:
+    def data(self) -> List:
         response = self.response.json()
-        return response['error'] if self.error else [
+        return [response] if self.error() else [
             {'name': k,
              'balance': v
              } for k, v in response['result'].items() if float(v) > 0]
 
 
 class HistoryContext(PageContext):
-    @property
-    def data(self) -> list:
-        return self.response['error'] if self.error else [
-            item for item in self.response]
+    def get(self, data: dict) -> object:
+        for trade in data['result']['trades'].values():
+            if trade['pair'] == self.id:
+                yield {
+                    'id': trade['pair'],
+                    'side': trade['type'],
+                    'price': trade['price'],
+                    'size': trade['vol'],
+                    'timestamp': epoch_to_datetime(trade['time'])
+                }
 
 
 class TransfersContext(PageContext):
-    def __init__(self, query: AbstractQuery, messenger: AbstractMessenger):
-        self.__query = query
-        self.__response = messenger.page(query)
-        self.__product_id = ''
-        self.__accounts = []
-
-    @property
-    def product_id(self) -> str:
-        return self.__product_id
-
-    @product_id.setter
-    def product_id(self, value: str):
-        self.__product_id = value
-
-    @property
-    def accounts(self) -> list:
-        return self.__accounts
-
-    @accounts.setter
-    def accounts(self, value: list):
-        self.__accounts = value
-
-    @property
-    def data(self) -> list:
-        products = []
-        response = self.response.json()
-        if self.error:
-            return response
-        for transfer in response:
-            for account in self.accounts:
-                if self.match(account, transfer):
-                    product = self.format(account, transfer)
-                    products.append(product)
-        return products
-
-    @staticmethod
-    def fee(transfer: dict) -> str:
-        try:
-            return transfer['details']['fee']
-        except (KeyError,):
-            return '0'
-
-    @staticmethod
-    def is_canceled(transfer) -> bool:
-        return bool(transfer.get('canceled_at'))
-
-    @staticmethod
-    def is_matched(account: dict, transfer: dict) -> bool:
-        return account.get('id') == transfer.get('account_id')
-
-    def is_product(self, account: dict) -> bool:
-        return account.get('currency') in self.product_id.split('-')[0]
-
-    def match(self, account: dict, transfer: dict) -> bool:
-        return self.is_product(account) and \
-            self.is_matched(account, transfer) and \
-            not self.is_canceled(transfer)
-
-    def format(self, account: dict, transfer: dict) -> dict:
-        return {
-            'type': transfer['type'],
-            'name': account['currency'],
-            'amount': transfer['amount'],
-            'fee': self.fee(transfer),
-            'timestamp': transfer['created_at']
-        }
+    def get(self, data: dict) -> object:
+        for transfer in data['result']['ledger'].values():
+            if transfer['asset'] == self.id.split('Z')[0]:
+                yield {
+                    'name': transfer['asset'],
+                    'type': transfer['type'],
+                    'amount': transfer['amount'],
+                    'fee': transfer['fee'],
+                    'timestamp': epoch_to_datetime(transfer['time'])
+                }
 
 
-class PriceContext(GetContext):
+class PriceContext(Context):
     @property
     def data(self) -> dict:
         response = self.response.json()
-        return response if self.error else {
-            'bid': response['bid'],
-            'ask': response['ask'],
-            'price': response['price']
+        return response if self.error() else {
+            'bid': response['result'][self.id]['b'][0],
+            'ask': response['result'][self.id]['a'][0],
+            'price': response['result'][self.id]['p'][0]
         }
 
 
-class OrderContext(PostContext):
+class AddOrderContext(Context):
+    @property
+    def data(self) -> str:
+        response = self.response.json()
+        return response if self.error() else response['result']['txid']
+
+
+class QueryOrderContext(Context):
     @property
     def data(self) -> dict:
         response = self.response.json()
-        return response if self.error else {
-            'timestamp': response['created_at'],
-            'id': response['product_id'],
-            'side': response['side'],
-            'price': response['price'],
-            'size': response['size']
+        return response if self.error() else {
+            'id': response['result'][self.id]['descr']['pair'],
+            'side': response['result'][self.id]['descr']['type'],
+            'price': response['result'][self.id]['price'],
+            'size': response['result'][self.id]['vol'],
+            'timestamp': epoch_to_datetime(response['result'][self.id]['opentm'])
         }
