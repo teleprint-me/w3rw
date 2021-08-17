@@ -14,6 +14,7 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 from ledger.api.factory import Dict
+
 from ledger.api.factory import AbstractMessenger
 from ledger.api.factory import AbstractClient
 from ledger.api.factory import AbstractFactory

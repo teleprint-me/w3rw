@@ -16,16 +16,16 @@
 from ledger.api.factory import __offset__
 from ledger.api.factory import __limit__
 from ledger.api.factory import __timeout__
+
+from ledger.api.factory import Response
+
 from ledger.api.factory import AbstractAuth
 from ledger.api.factory import AbstractAPI
 from ledger.api.factory import AbstractQuery
 from ledger.api.factory import AbstractMessenger
 
-from requests import Session
-from requests import Response
-
-
 import dataclasses
+import requests
 import time
 
 
@@ -77,7 +77,7 @@ class Messenger(AbstractMessenger):
     def __init__(self, auth: AbstractAuth):
         self.__auth: AbstractAuth = auth
         self.__api: AbstractAPI = API()
-        self.__session: Session = Session()
+        self.__session: requests.Session = requests.Session()
         self.__timeout: int = 30
 
     @property
@@ -93,7 +93,7 @@ class Messenger(AbstractMessenger):
         return self.__timeout
 
     @property
-    def session(self) -> Session:
+    def session(self) -> requests.Session:
         return self.__session
 
     def get(self, query: AbstractQuery) -> Response:
@@ -127,6 +127,8 @@ class Messenger(AbstractMessenger):
             error = response.json().get('error')
             if not ok or error:
                 return [response]
+            if not response.json().get('result'):
+                break
             responses.append(response)
             query.data['ofs'] += __offset__
         return responses
