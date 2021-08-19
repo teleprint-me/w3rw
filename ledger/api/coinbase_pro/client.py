@@ -13,6 +13,8 @@
 #
 # You should have received a copy of the GNU Affero General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
+from ledger.api.factory import Dict
+
 from ledger.api.factory import AbstractMessenger
 from ledger.api.factory import AbstractClient
 from ledger.api.factory import AbstractFactory
@@ -23,9 +25,11 @@ from ledger.api.coinbase_pro.messenger import Query
 from ledger.api.coinbase_pro.messenger import Messenger
 
 from ledger.api.coinbase_pro.context import ProductsContext
-from ledger.api.coinbase_pro.context import AccountsContext
+from ledger.api.coinbase_pro.context import AccountsBalanceContext
+from ledger.api.coinbase_pro.context import AccountsIdentityContext
 from ledger.api.coinbase_pro.context import HistoryContext
 from ledger.api.coinbase_pro.context import TransfersContext
+from ledger.api.coinbase_pro.context import TransfersAccountsContext
 from ledger.api.coinbase_pro.context import PriceContext
 from ledger.api.coinbase_pro.context import OrderContext
 
@@ -43,49 +47,54 @@ class CoinbaseProClient(AbstractClient):
     def messenger(self) -> AbstractMessenger:
         return self.__messenger
 
-    def products(self) -> list:
+    def products(self) -> Dict:
         query = Query('/products')
-        context = ProductsContext(query, self.messenger)
+        response = self.messenger.get(query)
+        context = ProductsContext(response)
         return context.data
 
-    def accounts(self) -> list:
+    def accounts(self) -> Dict:
         query = Query('/accounts')
-        context = AccountsContext(query, self.messenger)
+        response = self.messenger.get(query)
+        context = AccountsBalanceContext(response)
         return context.data
 
-    def history(self, product_id: str) -> list:
+    def history(self, product_id: str) -> Dict:
         query = Query('/fills', {'product_id': product_id})
-        context = HistoryContext(query, self.messenger)
+        responses = self.messenger.page(query)
+        context = HistoryContext(responses, product_id)
         return context.data
 
-    def deposits(self, product_id: str) -> list:
-        query = Query('/transfers', {'type': 'deposit'})
-        context = TransfersContext(query, self.messenger)
-        context.product_id = product_id
-        accounts = self.messenger.get(Query('/accounts'))
-        if accounts.status_code != 200:
-            return accounts.json()
-        context.accounts = accounts.json()
+    def deposits(self, product_id: str) -> Dict:
+        accounts = AccountsIdentityContext(
+            self.messenger.get(Query('/accounts')), product_id
+        )
+        transfers = TransfersContext(
+            self.messenger.page(Query('/transfers', {'type': 'deposit'}))
+        )
+        context = TransfersAccountsContext(accounts, transfers)
         return context.data
 
-    def withdrawals(self, product_id: str) -> list:
-        query = Query('/transfers', {'type': 'withdraw'})
-        context = TransfersContext(query, self.messenger)
-        context.product_id = product_id
-        accounts = self.messenger.get(Query('/accounts'))
-        if accounts.status_code != 200:
-            return accounts.json()
-        context.accounts = accounts.json()
+    def withdrawals(self, product_id: str) -> Dict:
+        accounts = AccountsIdentityContext(
+            self.messenger.get(Query('/accounts')), product_id
+        )
+        transfers = TransfersContext(
+            self.messenger.page(Query('/transfers', {'type': 'withdraw'}))
+        )
+        context = TransfersAccountsContext(accounts, transfers)
         return context.data
 
     def price(self, product_id: str) -> dict:
         query = Query(f'/products/{product_id}/ticker')
-        context = PriceContext(query, self.messenger)
+        response = self.messenger.get(query)
+        context = PriceContext(response)
         return context.data
 
     def order(self, data: dict) -> dict:
         query = Query('/orders', data)
-        context = OrderContext(query, self.messenger)
+        response = self.messenger.post(query)
+        context = OrderContext(response)
         return context.data
 
 

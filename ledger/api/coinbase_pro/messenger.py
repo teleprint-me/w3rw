@@ -14,55 +14,53 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 from ledger.api.factory import __timeout__
+
+from ledger.api.factory import Response
+
 from ledger.api.factory import AbstractAuth
 from ledger.api.factory import AbstractAPI
 from ledger.api.factory import AbstractQuery
 from ledger.api.factory import AbstractMessenger
 
+import dataclasses
 import requests
 import time
 
 
+@dataclasses.dataclass
 class Query(AbstractQuery):
-    def __init__(self, endpoint: str, data: dict = None):
-        self.__endpoint = endpoint
-        self.__data = data if data else {}
-        self.__id = None
-        self.__callback = None
+    __endpoint: str
+    __data: dict = dataclasses.field(default_factory=dict)
 
     @property
     def endpoint(self) -> str:
         return self.__endpoint
 
+    @endpoint.setter
+    def endpoint(self, value: str):
+        self.__endpoint = value
+
     @property
     def data(self) -> dict:
         return self.__data
 
-    @property
-    def id(self) -> str:
-        return self.__id
-
-    @id.setter
-    def id(self, value: str) -> None:
-        self.__id = value
-
-    @property
-    def callback(self) -> object:
-        return self.__callback
-
-    @callback.setter
-    def callback(self, value: str) -> None:
-        self.__callback = value
+    @data.setter
+    def data(self, value: dict):
+        self.__data = value
 
 
+@dataclasses.dataclass
 class API(AbstractAPI):
+    __version: int = 0
+    __url: str = 'https://api.pro.coinbase.com'
+
     @property
     def version(self) -> int:
-        return 0
+        return self.__version
 
     @property
     def url(self) -> str:
-        return 'https://api.pro.coinbase.com'
+        return self.__url
 
     def endpoint(self, value: str) -> str:
         return f'/{value.lstrip("/")}'
@@ -73,10 +71,10 @@ class API(AbstractAPI):
 
 class Messenger(AbstractMessenger):
     def __init__(self, auth: AbstractAuth = None):
-        self.__auth = auth
-        self.__api = API()
-        self.__timeout = 30
-        self.__session = requests.Session()
+        self.__auth: AbstractAuth = auth
+        self.__api: AbstractAPI = API()
+        self.__session: requests.Session = requests.Session()
+        self.__timeout: int = 30
 
     @property
     def auth(self) -> AbstractAuth:
@@ -94,7 +92,7 @@ class Messenger(AbstractMessenger):
     def session(self) -> requests.Session:
         return self.__session
 
-    def get(self, query: AbstractQuery) -> requests.Response:
+    def get(self, query: AbstractQuery) -> Response:
         time.sleep(__timeout__)
         return self.session.get(
             self.api.path(query.endpoint),
@@ -103,7 +101,7 @@ class Messenger(AbstractMessenger):
             timeout=self.timeout
         )
 
-    def post(self, query: AbstractQuery) -> requests.Response:
+    def post(self, query: AbstractQuery) -> Response:
         time.sleep(__timeout__)
         return self.session.post(
             self.api.path(query.endpoint),
@@ -112,16 +110,21 @@ class Messenger(AbstractMessenger):
             timeout=self.timeout
         )
 
-    def page(self, query: AbstractQuery) -> object:
+    def page(self, query: AbstractQuery) -> Response:
+        responses = []
         while True:
             response = self.get(query)
             if 200 != response.status_code:
-                return response.json()
-            for result in response.json():
-                yield result
-            if not response.headers.get('CB-AFTER'):
+                return [response]
+            if not response.json():
+                break
+            responses.append(response)
+            after = response.headers.get('CB-AFTER')
+            before = query.data.get('before')
+            if not after or before:
                 break
             query.data['after'] = response.headers.get('CB-AFTER')
+        return responses
 
     def close(self):
         self.session.close()

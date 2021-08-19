@@ -13,11 +13,11 @@
 #
 # You should have received a copy of the GNU Affero General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
-from api.factory import __agent__
-from api.factory import __source__
-from api.factory import __version__
-from api.factory import AbstractToken
-from api.factory import AbstractAuth
+from ledger.api.factory import __agent__
+from ledger.api.factory import __source__
+from ledger.api.factory import __version__
+
+from ledger.api.factory import AbstractAuth
 
 from requests.auth import AuthBase
 from requests.models import PreparedRequest
@@ -28,93 +28,34 @@ import hashlib
 import time
 
 
-class Token(AbstractToken):
+class Auth(AbstractAuth, AuthBase):
     def __init__(self, key: str, secret: str, passphrase: str = None):
         self.__key = key
         self.__secret = secret
-        self.__passphrase = passphrase if passphrase else ''
-
-    @property
-    def key(self) -> str:
-        return self.__key
-
-    @property
-    def secret(self) -> str:
-        return self.__secret
-
-    @property
-    def passphrase(self) -> str:
-        return self.__passphrase
-
-    @property
-    def data(self) -> dict:
-        return {
-            'key': self.key,
-            'secret': self.secret,
-            'passphrase': self.passphrase
-        }
-
-
-class Proxy(object):
-    def __init__(self, token: Token, request: PreparedRequest):
-        self.__token = token
-        self.__request = request
-        self.__timestamp = str(time.time())
-
-    @property
-    def token(self) -> Token:
-        return self.__token
-
-    @property
-    def request(self) -> PreparedRequest:
-        return self.__request
-
-    @property
-    def timestamp(self) -> str:
-        return self.__timestamp
-
-    @property
-    def body(self) -> str:
-        if not self.request.body:
-            return ''
-        return self.request.body.decode('utf-8')
-
-    @property
-    def message(self) -> str:
-        return f'{self.timestamp}' \
-               f'{self.request.method}' \
-               f'{self.request.path_url}' \
-               f'{self.body}'
-
-    @property
-    def b64signature(self) -> bytes:
-        key = base64.b64decode(self.token.secret)
-        message = self.message.encode('ascii')
-        signature = hmac.new(key, message, hashlib.sha256)
-        b64signature = base64.b64encode(signature.digest())
-        return b64signature.decode('utf-8')
-
-    @property
-    def headers(self) -> dict:
-        return {
-            'User-Agent': f'{__agent__}/{__version__} {__source__}',
-            'CB-ACCESS-SIGN': self.b64signature,
-            'CB-ACCESS-TIMESTAMP': self.timestamp,
-            'CB-ACCESS-KEY': self.token.key,
-            'CB-ACCESS-PASSPHRASE': self.token.passphrase,
-            'Content-Type': 'application/json'
-        }
-
-
-class Auth(AbstractAuth, AuthBase):
-    def __init__(self, key: str, secret: str, passphrase: str = None):
-        self.__token = Token(key, secret, passphrase)
+        self.__passphrase = passphrase
 
     def __call__(self, request: PreparedRequest) -> PreparedRequest:
-        proxy = Proxy(self.token, request)
-        request.headers.update(proxy.headers)
+        timestamp = str(time.time())
+        body = str() if not request.body else request.body.decode('utf-8')
+        message = f'{timestamp}{request.method.upper()}{request.path_url}{body}'
+        headers = self.headers(timestamp, message)
+        request.headers.update(headers)
         return request
 
-    @property
-    def token(self) -> Token:
-        return self.__token
+    def signature(self, message: str) -> bytes:
+        key = base64.b64decode(self.__secret)
+        msg = message.encode('ascii')
+        sig = hmac.new(key, msg, hashlib.sha256)
+        digest = sig.digest()
+        b64signature = base64.b64encode(digest)
+        return b64signature.decode('utf-8')
+
+    def headers(self, timestamp: str, message: str) -> dict:
+        return {
+            'User-Agent': f'{__agent__}/{__version__} {__source__}',
+            'CB-ACCESS-SIGN': self.signature(message),
+            'CB-ACCESS-TIMESTAMP': timestamp,
+            'CB-ACCESS-KEY': self.__key,
+            'CB-ACCESS-PASSPHRASE': self.__passphrase,
+            'Content-Type': 'application/json'
+        }
