@@ -51,7 +51,9 @@ class Context(AbstractContext):
         self.__id = value
 
     def error(self) -> bool:
-        return bool(self.response.json()['error'])
+        ok = 200 == self.response.status_code
+        error = bool(self.response.json().get('error'))
+        return not ok or error
 
 
 class PageContext(Context):
