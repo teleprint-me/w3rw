@@ -20,8 +20,6 @@ from ledger.api.factory import AbstractClient
 from ledger.api.factory import AbstractFactory
 
 from ledger.api.coinbase_pro.auth import Auth
-
-from ledger.api.coinbase_pro.messenger import Query
 from ledger.api.coinbase_pro.messenger import Messenger
 
 from ledger.api.coinbase_pro.context import ProductsContext
@@ -48,62 +46,64 @@ class CoinbaseProClient(AbstractClient):
         return self.__messenger
 
     def products(self) -> Dict:
-        query = Query('/products')
-        response = self.messenger.get(query)
+        response = self.messenger.get('/products')
         context = ProductsContext(response)
         return context.data
 
     def accounts(self) -> Dict:
-        query = Query('/accounts')
-        response = self.messenger.get(query)
+        response = self.messenger.get('/accounts')
         context = AccountsBalanceContext(response)
         return context.data
 
     def history(self, product_id: str) -> Dict:
-        query = Query('/fills', {'product_id': product_id})
-        responses = self.messenger.page(query)
+        responses = self.messenger.page(
+            '/fills', {'product_id': product_id}
+        )
         context = HistoryContext(responses, product_id)
         return context.data
 
     def deposits(self, product_id: str) -> Dict:
         accounts = AccountsIdentityContext(
-            self.messenger.get(Query('/accounts')), product_id
+            self.messenger.get('/accounts'), product_id
         )
         transfers = TransfersContext(
-            self.messenger.page(Query('/transfers', {'type': 'deposit'}))
+            self.messenger.page('/transfers', {'type': 'deposit'})
         )
         context = TransfersAccountsContext(accounts, transfers)
         return context.data
 
     def withdrawals(self, product_id: str) -> Dict:
         accounts = AccountsIdentityContext(
-            self.messenger.get(Query('/accounts')), product_id
+            self.messenger.get('/accounts'), product_id
         )
         transfers = TransfersContext(
-            self.messenger.page(Query('/transfers', {'type': 'withdraw'}))
+            self.messenger.page('/transfers', {'type': 'withdraw'})
         )
         context = TransfersAccountsContext(accounts, transfers)
         return context.data
 
     def price(self, product_id: str) -> dict:
-        query = Query(f'/products/{product_id}/ticker')
-        response = self.messenger.get(query)
+        response = self.messenger.get(f'/products/{product_id}/ticker')
         context = PriceContext(response)
         return context.data
 
-    def order(self, data: dict) -> dict:
-        query = Query('/orders', data)
-        response = self.messenger.post(query)
+    def order(self, json: dict) -> dict:
+        response = self.messenger.post('/orders', json)
         context = OrderContext(response)
         return context.data
 
 
 class CoinbaseProFactory(AbstractFactory):
+    def get_messenger(self,
+                      key: str,
+                      secret: str,
+                      passphrase: str = None) -> AbstractClient:
+
+        return Messenger(Auth(key, secret, passphrase))
+
     def get_client(self,
                    key: str,
                    secret: str,
                    passphrase: str = None) -> AbstractClient:
 
-        auth = Auth(key, secret, passphrase)
-        messenger = Messenger(auth)
-        return CoinbaseProClient(messenger)
+        return CoinbaseProClient(Messenger(Auth(key, secret, passphrase)))
