@@ -41,6 +41,12 @@ There are 3 parts to this API.
 
     The middleware builds on the Core and consists of a modified REST API for simplifying complicated requests through the use of the Factory Pattern.
 
+## Tips
+
+- Bitcoin (Segwit): 3E1YSahzUnYYx2RTuRt4KWogDBCsdCS1n3
+- Ethereum: 0x7be933221135468b9886632771fF289341144C3a
+- Litecoin (Segwit): MMNDfhgc3jfs3XJoJ7DSCedBp742dH12jD
+
 ## TODO
 
 ### Documentation
