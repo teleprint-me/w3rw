@@ -16,9 +16,7 @@
 from ledger.api.factory import __agent__
 from ledger.api.factory import __source__
 from ledger.api.factory import __version__
-
 from ledger.api.factory import AbstractAuth
-from ledger.api.factory import AbstractQuery
 
 import base64
 import hashlib
@@ -32,22 +30,22 @@ class Auth(AbstractAuth):
         self.__key = key
         self.__secret = secret
 
+    def __call__(self, endpoint: str, data: dict) -> dict:
+        return {
+            'User-Agent': f'{__agent__}/{__version__} {__source__}',
+            'API-Key': self.__key,
+            'API-Sign': self.signature(endpoint, data)
+        }
+
     @property
     def nonce(self) -> str:
         return str(int(1000 * time.time()))
 
-    def signature(self, query: AbstractQuery) -> bytes:
+    def signature(self, endpoint: str, data: dict) -> bytes:
         key = base64.b64decode(self.__secret)
-        post = urllib.parse.urlencode(query.data)
-        encoded = (str(query.data['nonce']) + post).encode()
-        message = query.endpoint.encode() + hashlib.sha256(encoded).digest()
+        post = urllib.parse.urlencode(data)
+        encoded = (str(data['nonce']) + post).encode()
+        message = endpoint.encode() + hashlib.sha256(encoded).digest()
         mac = hmac.new(key, message, hashlib.sha512)
         signature = base64.b64encode(mac.digest())
         return signature.decode()
-
-    def headers(self, query: AbstractQuery) -> dict:
-        return {
-            'User-Agent': f'{__agent__}/{__version__} {__source__}',
-            'API-Key': self.__key,
-            'API-Sign': self.signature(query)
-        }

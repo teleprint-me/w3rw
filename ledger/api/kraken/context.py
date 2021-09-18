@@ -15,7 +15,6 @@
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 from ledger.api.factory import List
 from ledger.api.factory import Response
-
 from ledger.api.factory import AbstractContext
 
 import dataclasses

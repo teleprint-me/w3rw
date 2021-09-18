@@ -14,14 +14,11 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 from ledger.api.factory import Dict
-
 from ledger.api.factory import AbstractMessenger
 from ledger.api.factory import AbstractClient
 from ledger.api.factory import AbstractFactory
 
 from ledger.api.kraken.auth import Auth
-
-from ledger.api.kraken.messenger import Query
 from ledger.api.kraken.messenger import Messenger
 
 from ledger.api.kraken.context import ProductsContext
@@ -47,52 +44,46 @@ class Client(AbstractClient):
         return self.__messenger
 
     def products(self) -> Dict:
-        query = Query('/public/AssetPairs')
-        response = self.messenger.get(query)
+        response = self.messenger.get('/public/AssetPairs')
         context = ProductsContext(response)
         return context.data
 
     def accounts(self) -> Dict:
-        query = Query('/private/Balance')
-        response = self.messenger.post(query)
+        response = self.messenger.post('/private/Balance')
         context = AccountsContext(response)
         return context.data
 
     def history(self, product_id: str) -> Dict:
-        query = Query('/private/TradesHistory')
-        response = self.messenger.page(query)
+        response = self.messenger.page('/private/TradesHistory')
         context = HistoryContext(response, product_id)
         return context.data
 
     def deposits(self, product_id: str) -> Dict:
-        query = Query('/private/Ledgers', {'type': 'deposit'})
-        response = self.messenger.page(query)
+        response = self.messenger.page('/private/Ledgers', {'type': 'deposit'})
         context = TransfersContext(response, product_id)
         return context.data
 
     def withdrawals(self, product_id: str) -> Dict:
-        query = Query('/private/Ledgers', {'type': 'withdrawal'})
-        response = self.messenger.page(query)
+        response = self.messenger.page('/private/Ledgers', {'type': 'withdrawal'})
         context = TransfersContext(response, product_id)
         return context.data
 
     def price(self, product_id: str) -> dict:
-        query = Query('/public/Ticker', {'pair': product_id})
-        response = self.messenger.get(query)
+        response = self.messenger.get('/public/Ticker', {'pair': product_id})
         context = PriceContext(response, product_id)
         return context.data
 
     def order(self, data: dict) -> dict:
-        response = self.messenger.post(Query('/private/AddOrder', data))
+        response = self.messenger.post('/private/AddOrder', data)
         add_order = AddOrderContext(response)
-        query = Query('/private/QueryOrders', {'txid': add_order.data})
-        response = self.messenger.post(query)
+        response = self.messenger.post('/private/QueryOrders', {'txid': add_order.data})
         query_order = QueryOrderContext(response, add_order.data)
         return query_order.data
 
 
 class KrakenFactory(AbstractFactory):
+    def get_messenger(self, key: str, secret: str) -> AbstractMessenger:
+        return Messenger(Auth(key, secret))
+
     def get_client(self, key: str, secret: str) -> AbstractClient:
-        auth = Auth(key, secret)
-        messenger = Messenger(auth)
-        return Client(messenger)
+        return Client(Messenger(Auth(key, secret)))

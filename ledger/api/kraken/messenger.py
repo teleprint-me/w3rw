@@ -16,39 +16,14 @@
 from ledger.api.factory import __offset__
 from ledger.api.factory import __limit__
 from ledger.api.factory import __timeout__
-
 from ledger.api.factory import Response
-
 from ledger.api.factory import AbstractAuth
 from ledger.api.factory import AbstractAPI
-from ledger.api.factory import AbstractQuery
 from ledger.api.factory import AbstractMessenger
 
 import dataclasses
 import requests
 import time
-
-
-@dataclasses.dataclass
-class Query(AbstractQuery):
-    __endpoint: str
-    __data: dict = dataclasses.field(default_factory=dict)
-
-    @property
-    def endpoint(self) -> str:
-        return self.__endpoint
-
-    @endpoint.setter
-    def endpoint(self, value: str):
-        self.__endpoint = value
-
-    @property
-    def data(self) -> dict:
-        return self.__data
-
-    @data.setter
-    def data(self, value: dict):
-        self.__data = value
 
 
 @dataclasses.dataclass
@@ -96,33 +71,39 @@ class Messenger(AbstractMessenger):
     def session(self) -> requests.Session:
         return self.__session
 
-    def get(self, query: AbstractQuery) -> Response:
+    def get(self, endpoint: str, params: dict = None) -> Response:
         time.sleep(__timeout__)
-        query.endpoint = self.api.endpoint(query.endpoint)
-        query.data['nonce'] = self.auth.nonce
+        endpoint = self.api.endpoint(endpoint)
+        if not params:
+            params = {}
+        params['nonce'] = self.auth.nonce
         return self.session.get(
-            self.api.path(query.endpoint),
-            params=query.data,
-            headers=self.auth.headers(query),
+            self.api.path(endpoint),
+            params=params,
+            headers=self.auth(endpoint, params),
             timeout=self.timeout
         )
 
-    def post(self, query: AbstractQuery) -> Response:
+    def post(self, endpoint: str, data: dict) -> Response:
         time.sleep(__timeout__)
-        query.endpoint = self.api.endpoint(query.endpoint)
-        query.data['nonce'] = self.auth.nonce
+        endpoint = self.api.endpoint(endpoint)
+        if not data:
+            data = {}
+        data['nonce'] = self.auth.nonce
         return self.session.post(
-            self.api.path(query.endpoint),
-            data=query.data,
-            headers=self.auth.headers(query),
+            self.api.path(endpoint),
+            data=data,
+            headers=self.auth(endpoint, data),
             timeout=self.timeout
         )
 
-    def page(self, query: AbstractQuery) -> Response:
+    def page(self, endpoint: str, data: dict) -> Response:
         responses = []
-        query.data['ofs'] = 0
-        while query.data['ofs'] < __limit__:
-            response = self.post(query)
+        if not data:
+            data = {}
+        data['ofs'] = 0
+        while data['ofs'] < __limit__:
+            response = self.post(endpoint, data)
             ok = 200 == response.status_code
             error = response.json().get('error')
             if not ok or error:
@@ -130,7 +111,7 @@ class Messenger(AbstractMessenger):
             if not response.json().get('result'):
                 break
             responses.append(response)
-            query.data['ofs'] += __offset__
+            data['ofs'] += __offset__
         return responses
 
     def close(self) -> None:
