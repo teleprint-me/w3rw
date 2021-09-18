@@ -36,16 +36,6 @@ class AbstractAuth(abc.ABC):
         pass
 
 
-class AbstractQuery(abc.ABC):
-    @abc.abstractproperty
-    def endpoint(self) -> str:
-        pass
-
-    @abc.abstractproperty
-    def data(self) -> dict:
-        pass
-
-
 class AbstractAPI(abc.ABC):
     @abc.abstractproperty
     def version(self) -> int:
@@ -90,15 +80,15 @@ class AbstractMessenger(abc.ABC):
         pass
 
     @abc.abstractmethod
-    def get(self, query: AbstractQuery) -> Response:
+    def get(self, endpoint: str, params: dict = None) -> Response:
         pass
 
     @abc.abstractmethod
-    def post(self, query: AbstractQuery) -> Response:
+    def post(self, endpoint: str, json: dict = None) -> Response:
         pass
 
     @abc.abstractmethod
-    def page(self, query: AbstractQuery) -> Response:
+    def page(self, endpoint: str, params: dict = None) -> Response:
         pass
 
     @abc.abstractmethod
@@ -167,6 +157,10 @@ class AbstractClient(abc.ABC):
 
 
 class AbstractFactory(abc.ABC):
+    @abc.abstractmethod
+    def get_messenger(self) -> AbstractMessenger:
+        pass
+
     @abc.abstractmethod
     def get_client(self) -> AbstractClient:
         pass
