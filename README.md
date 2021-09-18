@@ -1,4 +1,19 @@
-# teleprint.me rest api
+# ledger-api
+
+```
+ _       _                 _       _
+| |_ ___| | ___ _ __  _ __(_)_ __ | |_   _ __ ___   ___ 
+| __/ _ \ |/ _ \ '_ \| '__| | '_ \| __| | '_ ` _ \ / _ \
+| ||  __/ |  __/ |_) | |  | | | | | |_ _| | | | | |  __/
+ \__\___|_|\___| .__/|_|  |_|_| |_|\__(_)_| |_| |_|\___|
+               |_|
+ _          _                                  _ 
+| | ___  __| | __ _  ___ _ __       __ _ _ __ (_)
+| |/ _ \/ _` |/ _` |/ _ \ '__|____ / _` | '_ \| |
+| |  __/ (_| | (_| |  __/ | |_____| (_| | |_) | |
+|_|\___|\__,_|\__, |\___|_|        \__,_| .__/|_|
+              |___/                     |_|
+```
 
 ## About
 
@@ -7,8 +22,7 @@ A `requests` wrapper for interfacing with Centralized and Decentralized Cryptocu
 ## Notes
 
 - This library is a dependency of the [teleprint-me/ledger](https://github.com/teleprint-me/ledger) repository.
-- This library is intentionally minimalist and should stay as such. Adding features is left as the responsibility to the developer.
-- There is no plan to add Web Socket support. There are plenty of libraries that can help you achieve this end. The `websocket-client` library is a popular choice.
+- This library is intentionally minimalist and targets only REST API's.
 - This library is a work in progress and is subject to change. 
 - There may be aspects of this library that are broken, buggy, or missing from the implementation.
 - There is NO WARRANTY, MERCHANTABILITY, or FITNESS FOR A PARTICULAR PURPOSE.
@@ -29,9 +43,9 @@ _Note: Packaging support for `pip` will be added at some point in the future._
 
 There are 3 parts to this API.
 
-- [ABI Documentation](https://github.com/teleprint-me/ledger-api/blob/main/docs/README.md)
+- [ABI Documentation](https://github.com/teleprint-me/ledger-api/tree/main/docs)
 
-    The ABI consists of the outline, or design, of the overall project. This design defines the interface for **all** REST API's within this repository.
+    The ABI consists of the general design of the overall project. This design defines the general interface for all REST API's within this repository.
 
 - [Core Documentation](https://github.com/teleprint-me/ledger-api/blob/main/docs/Core.md)
 
@@ -91,4 +105,6 @@ There are 3 parts to this API.
 - [ ] Metamask Wallet
 - [ ] Ledger Wallet
 
-_Note: There is no method to gaurentee testing. Only a guarentee to verify code integrity. Testing these API's is difficult seeing as some do not support a sandbox for testing. An example of this is Kraken. Kraken does not support a sandbox and there is no way to validate that certain endpoints are functioning as expected. Another caveat is that Kraken does not utilize the HTTP response methods such as the 200 Success Code. You have to manually check the response for a error key. This makes it even more difficult seeing as checking for a 200 response code is the expected method for a successful response. The major pitfall to this is that exploratory testing is required to make sure the code is functioning as expected making bugs difficult to pinpoint. Testing may not be implemented for this library for this very reason and this reason alone. If testing is implemented at any point in time, then it should be implemented to verify the structure of the code instead. It's an unfortunate compromise that makes this a challenging experience._
+#### A Note on Testing
+
+There is no method to gaurentee testing. Only a guarentee to verify code integrity. Testing these API's is difficult seeing as some do not support a sandbox for testing. The major pitfall to this is that exploratory testing is required to verify that the code is functioning as intended. This makes bugs difficult to pinpoint. If testing is implemented at any point in time, then it should be implemented to verify the structure of the code instead.

@@ -12,11 +12,11 @@ _Note: This documentation is for educational purposes and is not intended to be 
 ## Global Variables
 
 - `__agent__` defines who the request is made by
-- `__source__` defines the URI pointing to the public repository
+- `__source__` defines the public repository URL
 - `__version__` defines the library version
+- `__timeout__` defines rate limiting value
 - `__offset__` defines the number of entries to be retrieved per request
 - `__limit__` defines the maximum number of entries to be received during a request
-- `__timeout__` defines how long to wait until the request fails
 
 _Note: `__offset__` and `__limit__` are Kraken specific_
 
@@ -32,12 +32,10 @@ _Note: All other data types utilized are built-in._
 
 All REST API implementations are modeled by the ABI. This means that all interfaces are the same and expect the same inputs. If there is any differnce in either the input or output, then that difference is subject to the platforms implementation.
 
-A simpler way to explain it is that Coinbase, Coinbase Pro, and Kraken all will return different results because they each have unique designs that determines I/O operations based on the specified platform.
-
 We can then come to 2 basic conclusions.
 
 - The first conclusion is that all I/O will differ if utilizing the Core API as the I/O is platform dependent.
-- The second conclusion is that all I/O will be the same if utilizing the Middleware API as it expects the same input and gives back the same output.
+- The second conclusion is that all I/O will be the same if utilizing the Middleware API as it expects the same input and gives back the same output. Any variation that may occur during I/O is platform dependent.
 
 ### AbstractAuth
 
@@ -64,7 +62,7 @@ AbstractMessenger(auth: AbstractAuth)
 ```
 
 - AbstractMessenger defines the `requests` wrapper. 
-- This object is returned by executing the method `AbstractClient.get_messenger(key: str, secret: str)`
+- This object is returned by executing the method `AbstractFactory.get_messenger(key: str, secret: str)`
 
 _Note: This is the class you'll want to use if you're interested in implementing a single REST API._
 
@@ -75,7 +73,7 @@ AbstractClient(messenger: AbstractMessenger)
 ```
 
 - AbstractClient defines the Middleware API used for simplifying complicated REST API requests.
-- This object is returned by executing the method `AbstractClient.get_client(key: str, secret: str)`
+- This object is returned by executing the method `AbstractFactory.get_client(key: str, secret: str)`
 
 _Note: This is the class you'll want to use if you're interested in implementing multiple REST API's._
 
@@ -85,4 +83,4 @@ _Note: This is the class you'll want to use if you're interested in implementing
 AbstractFactory()
 ```
 
-- AbstractFactory defines the `AbstractMessenger` and `AbstractClient` that will be constructed and returned.
+- AbstractFactory defines the `AbstractMessenger` and `AbstractClient` objects that will be constructed and returned.

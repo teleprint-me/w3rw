@@ -38,7 +38,7 @@ Messenger(auth: AbstractAuth)
 ```
 
 - Messenger implements the `requests` wrapper. 
-- This object is returned by executing the method `AbstractClient.get_messenger(key: str, secret: str)`
+- This object is returned by executing the method `AbstractFactory.get_messenger(key: str, secret: str)`
 
 _Note: This is the class you'll want to use if you're interested in implementing a single REST API._
 
