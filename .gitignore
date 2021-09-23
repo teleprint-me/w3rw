@@ -1,6 +1,7 @@
 # Ignore files
 main.py
 test.py
+settings.ini
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
