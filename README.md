@@ -12,29 +12,11 @@ __      _|___ / _ ____      __
 
 A `requests` wrapper for interfacing with Centralized and Decentralized Cryptocurrency REST API's.
 
-## Notes
-
-- This library is a dependency of the [teleprint-me/ledger](https://github.com/teleprint-me/ledger) repository.
-- This library is intentionally minimalist and targets only REST API's.
-- This library is a work in progress and is subject to change. 
-- There may be aspects of this library that are broken, buggy, or missing from the implementation.
-- There is NO WARRANTY, MERCHANTABILITY, or FITNESS FOR A PARTICULAR PURPOSE.
-
-## Install
-
-```sh
-git clone https://github.com/teleprint-me/ledger-api.git
-cd ledger-api
-virtualenv venv
-source venv/bin/activate
-pip install -r requirements 
-```
-
-_Note: Packaging support for `pip` will be added at some point in the future._
-
 ## Docs
 
-There are 3 parts to this API.
+- [Install](https://github.com/teleprint-me/ledger-api/blob/main/docs/Install.md)
+
+    Install the w3rw library
 
 - [ABI Documentation](https://github.com/teleprint-me/ledger-api/tree/main/docs)
 
@@ -62,10 +44,6 @@ There are 3 parts to this API.
 - [ ] Core
 - [ ] Middleware
 
-### Package Management
-
-- [ ] ???
-
 ### Centralized Exchanges
 
 - [ ] Coinbase
@@ -86,17 +64,6 @@ There are 3 parts to this API.
 - [ ] Ledger Wallet
 
 ### Tests
-
-- [ ] Coinbase
-- [ ] Coinbase Pro
-- [ ] Kraken
-- [ ] Gemini
-- [ ] 1inch
-- [ ] Uniswap
-- [ ] Compound
-- [ ] Coinbase Wallet
-- [ ] Metamask Wallet
-- [ ] Ledger Wallet
 
 #### A Note on Testing
 
