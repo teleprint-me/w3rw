@@ -13,37 +13,58 @@
 #
 # You should have received a copy of the GNU Affero General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
+from ledger.api.factory import __timeout__
+
+from ledger.api.factory import Response
+
+from ledger.api.factory import AbstractAuth
 from ledger.api.factory import AbstractAPI
+from ledger.api.factory import AbstractQuery
 from ledger.api.factory import AbstractMessenger
 
-from ledger.api.coinbase.auth import Auth
-
+import dataclasses
 import requests
+import time
 
 
+@dataclasses.dataclass
+class Query(AbstractQuery):
+    __endpoint: str
+    __data: dict = dataclasses.field(default_factory=dict)
+
+    @property
+    def endpoint(self) -> str:
+        return self.__endpoint
+
+    @endpoint.setter
+    def endpoint(self, value: str):
+        self.__endpoint = value
+
+    @property
+    def data(self) -> dict:
+        return self.__data
+
+    @data.setter
+    def data(self, value: dict):
+        self.__data = value
+
+
+@dataclasses.dataclass
 class API(AbstractAPI):
-    def __init__(self):
-        self.__options = {}
+    __version: int = 2
+    __url: str = 'https://api.coinbase.com'
 
     @property
     def version(self) -> int:
-        return 2
-
-    @property
-    def options(self) -> dict:
-        return self.__options
-
-    @options.setter
-    def options(self, value: dict) -> None:
-        """set the dictionary for response.json"""
-        assert isinstance(value, dict), '`value` must be of type dict'
-        self.__options = value
+        return self.__version
 
     @property
     def url(self) -> str:
-        return 'https://api.coinbase.com'
+        return self.__url
 
     def endpoint(self, value: str) -> str:
+        if value.startswith(f'/v{self.version}'):
+            return value
         return f'/v{self.version}/{value.lstrip("/")}'
 
     def path(self, value: str) -> str:
@@ -51,19 +72,18 @@ class API(AbstractAPI):
 
 
 class Messenger(AbstractMessenger):
-    def __init__(self, auth: Auth = None) -> None:
-        self.__auth = auth
-        self.__api = API()
-        self.__timeout = 30
-        self.__session = requests.Session()
-        self.__response = None
+    def __init__(self, auth: AbstractAuth):
+        self.__auth: AbstractAuth = auth
+        self.__api: AbstractAPI = API()
+        self.__session: requests.Session = requests.Session()
+        self.__timeout: int = 30
 
     @property
-    def auth(self) -> Auth:
+    def auth(self) -> AbstractAuth:
         return self.__auth
 
     @property
-    def api(self) -> API:
+    def api(self) -> AbstractAPI:
         return self.__api
 
     @property
@@ -71,76 +91,39 @@ class Messenger(AbstractMessenger):
         return self.__timeout
 
     @property
-    def options(self) -> dict:
-        return self.__api.options
-
-    @options.setter
-    def options(self, value: dict) -> None:
-        self.__api.options = value
-
-    @property
     def session(self) -> requests.Session:
         return self.__session
 
-    @property
-    def response(self) -> requests.Response:
-        return self.__response
-
-    def get(self, endpoint: str, params: dict = None) -> dict:
-        url = self.__api.path(endpoint)
-
-        self.__response = self.session.get(
-            url,
-            params=params,
+    def get(self, query: AbstractQuery) -> Response:
+        time.sleep(__timeout__)
+        return self.session.get(
+            self.api.path(query.endpoint),
+            params=query.data,
             auth=self.auth,
             timeout=self.timeout
         )
 
-        return self.__response.json(**self.options)
-
-    def post(self, endpoint: str, data: dict = None) -> dict:
-        url = self.__api.path(endpoint)
-
-        self.__response = self.session.post(
-            url,
-            json=data,
+    def post(self, query: AbstractQuery) -> Response:
+        time.sleep(__timeout__)
+        return self.session.post(
+            self.api.path(query.endpoint),
+            json=query.data,
             auth=self.auth,
             timeout=self.timeout
         )
 
-        return self.__response.json(**self.options)
-
-    def page(self, endpoint: str, params: dict = None) -> object:
+    def page(self, query: AbstractQuery) -> Response:
         # source: https://docs.pro.coinbase.com/?python#pagination
-        url = self.__api.path(endpoint)
-
-        if params is None:
-            params = dict()
-
         while True:
-            self.__response = self.session.get(
-                url,
-                params=params,
-                auth=self.auth,
-                timeout=self.timeout
-            )
-
-            results = self.__response.json(**self.options)
-
-            if self.__response.status_code != 200:
-                return results
-
-            for result in results:
-                yield result
-
-            after = self.__response.headers.get('CB-AFTER')
-            before = params.get('before')
-            end = not after or before
-
-            if end:
+            response = self.get(query)
+            if 200 != response.status_code:
+                return [response]
+            yield response
+            after = response.headers.get('CB-AFTER')
+            before = query.data.get('before')
+            if not after or before:
                 break
-
-            params['after'] = self.__response.headers['CB-AFTER']
+            query.data['after'] = response.headers['CB-AFTER']
 
     def close(self):
         self.session.close()

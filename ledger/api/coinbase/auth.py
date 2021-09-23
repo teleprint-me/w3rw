@@ -16,87 +16,40 @@
 from ledger.api.factory import __agent__
 from ledger.api.factory import __source__
 from ledger.api.factory import __version__
-from ledger.api.factory import AbstractToken
+
 from ledger.api.factory import AbstractAuth
 
 from requests.auth import AuthBase
 from requests.models import PreparedRequest
 
-import base64
 import hmac
 import hashlib
 import time
 
 
-class Token(AbstractToken):
-    def __init__(self, key: str, secret: str, passphrase: str = None):
+class Auth(AbstractAuth, AuthBase):
+    def __init__(self, key: str, secret: str):
         self.__key = key
         self.__secret = secret
-        self.__passphrase = passphrase
-
-    @property
-    def key(self) -> str:
-        return self.__key
-
-    @property
-    def secret(self) -> str:
-        return self.__secret
-
-    @property
-    def passphrase(self) -> str:
-        return self.__passphrase
-
-    def as_dict(self) -> dict:
-        return {
-            'key': self.key,
-            'secret': self.secret,
-        }
-
-
-def get_timestamp() -> str:
-    return str(time.time())
-
-
-def get_request_body(request: PreparedRequest) -> str:
-    return '' if request.body is None else request.body.decode('utf-8')
-
-
-def get_message(timestamp: str, request: PreparedRequest) -> str:
-    body = get_request_body(request)
-    return f'{timestamp}{request.method.upper()}{request.path_url}{body}'
-
-
-def get_b64signature(message: str, token: Token) -> bytes:
-    key = base64.b64decode(token.secret)
-    msg = message.encode('ascii')
-    sig = hmac.new(key, msg, hashlib.sha256)
-    digest = sig.digest()
-    b64signature = base64.b64encode(digest)
-    return b64signature.decode('utf-8')
-
-
-def get_headers(timestamp: str, b64signature: bytes, token: Token) -> dict:
-    return {
-        'User-Agent': f'{__agent__}/{__version__} {__source__}',
-        'CB-ACCESS-KEY': token.key,
-        'CB-ACCESS-SIGN': b64signature,
-        'CB-ACCESS-TIMESTAMP': timestamp,
-        'Content-Type': 'application/json'
-    }
-
-
-class Auth(AbstractAuth, AuthBase):
-    def __init__(self, key, secret):
-        self.__token = Token(key, secret)
 
     def __call__(self, request: PreparedRequest) -> PreparedRequest:
-        timestamp = get_timestamp()
-        message = get_message(timestamp, request)
-        b64signature = get_b64signature(message, self.__token)
-        headers = get_headers(timestamp, b64signature, self.__token)
+        timestamp = str(int(time.time()))
+        body = '' if request.body is None else request.body.decode('utf-8')
+        message = f'{timestamp}{request.method.upper()}{request.path_url}{body}'
+        headers = self.headers(timestamp, message)
         request.headers.update(headers)
         return request
 
-    @property
-    def token(self) -> Token:
-        return self.__token
+    def signature(self, message: str) -> str:
+        key = self.__secret.encode('ascii')
+        msg = message.encode('ascii')
+        return hmac.new(key, msg, hashlib.sha256).hexdigest()
+
+    def headers(self, timestamp: str, message: str) -> dict:
+        return {
+            'User-Agent': f'{__agent__}/{__version__} {__source__}',
+            'CB-ACCESS-KEY': self.__key,
+            'CB-ACCESS-SIGN': self.signature(message),
+            'CB-ACCESS-TIMESTAMP': timestamp,
+            'Content-Type': 'application/json'
+        }
