@@ -13,13 +13,14 @@
 #
 # You should have received a copy of the GNU Affero General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
-from ledger.api.factory import __offset__
-from ledger.api.factory import __limit__
-from ledger.api.factory import __timeout__
-from ledger.api.factory import Response
-from ledger.api.factory import AbstractAuth
-from ledger.api.factory import AbstractAPI
-from ledger.api.factory import AbstractMessenger
+from w3rw import __offset__
+from w3rw import __limit__
+from w3rw import __timeout__
+from w3rw import Response
+
+from w3rw.factory import AbstractAuth
+from w3rw.factory import AbstractAPI
+from w3rw.factory import AbstractMessenger
 
 import dataclasses
 import requests
@@ -84,7 +85,7 @@ class Messenger(AbstractMessenger):
             timeout=self.timeout
         )
 
-    def post(self, endpoint: str, data: dict) -> Response:
+    def post(self, endpoint: str, data: dict = None) -> Response:
         time.sleep(__timeout__)
         endpoint = self.api.endpoint(endpoint)
         if not data:
@@ -97,7 +98,7 @@ class Messenger(AbstractMessenger):
             timeout=self.timeout
         )
 
-    def page(self, endpoint: str, data: dict) -> Response:
+    def page(self, endpoint: str, data: dict = None) -> Response:
         responses = []
         if not data:
             data = {}

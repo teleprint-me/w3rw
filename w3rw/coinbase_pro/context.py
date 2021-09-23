@@ -13,9 +13,10 @@
 #
 # You should have received a copy of the GNU Affero General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
-from ledger.api.factory import AbstractContext
-from ledger.api.factory import List
-from ledger.api.factory import Response
+from w3rw import List
+from w3rw import Response
+
+from w3rw.factory import AbstractContext
 
 import dataclasses
 import requests

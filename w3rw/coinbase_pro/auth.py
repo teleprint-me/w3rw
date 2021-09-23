@@ -13,11 +13,11 @@
 #
 # You should have received a copy of the GNU Affero General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
-from ledger.api.factory import __agent__
-from ledger.api.factory import __source__
-from ledger.api.factory import __version__
+from w3rw import __agent__
+from w3rw import __source__
+from w3rw import __version__
 
-from ledger.api.factory import AbstractAuth
+from w3rw.factory import AbstractAuth
 
 from requests.auth import AuthBase
 from requests.models import PreparedRequest

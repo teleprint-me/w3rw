@@ -13,21 +13,11 @@
 #
 # You should have received a copy of the GNU Affero General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
+from w3rw import Dict
+from w3rw import Response
+
 import abc
 import requests
-import typing
-
-__agent__: str = 'teleprint.me'
-__source__: str = 'https://github.com/teleprint-me/ledger'
-__version__: str = '0.1.15'
-
-__offset__: int = 50
-__limit__: int = 250
-__timeout__: float = 0.275
-
-List = typing.TypeVar('List', list, list[dict])
-Dict = typing.TypeVar('DList', dict, List)
-Response = typing.TypeVar('Response', requests.Response, list[requests.Response])
 
 
 class AbstractAuth(abc.ABC):

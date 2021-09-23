@@ -13,23 +13,23 @@
 #
 # You should have received a copy of the GNU Affero General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
-from ledger.api.factory import Dict
+from w3rw import Dict
 
-from ledger.api.factory import AbstractMessenger
-from ledger.api.factory import AbstractClient
-from ledger.api.factory import AbstractFactory
+from w3rw.factory import AbstractMessenger
+from w3rw.factory import AbstractClient
+from w3rw.factory import AbstractFactory
 
-from ledger.api.coinbase_pro.auth import Auth
-from ledger.api.coinbase_pro.messenger import Messenger
+from w3rw.coinbase_pro.auth import Auth
+from w3rw.coinbase_pro.messenger import Messenger
 
-from ledger.api.coinbase_pro.context import ProductsContext
-from ledger.api.coinbase_pro.context import AccountsBalanceContext
-from ledger.api.coinbase_pro.context import AccountsIdentityContext
-from ledger.api.coinbase_pro.context import HistoryContext
-from ledger.api.coinbase_pro.context import TransfersContext
-from ledger.api.coinbase_pro.context import TransfersAccountsContext
-from ledger.api.coinbase_pro.context import PriceContext
-from ledger.api.coinbase_pro.context import OrderContext
+from w3rw.coinbase_pro.context import ProductsContext
+from w3rw.coinbase_pro.context import AccountsBalanceContext
+from w3rw.coinbase_pro.context import AccountsIdentityContext
+from w3rw.coinbase_pro.context import HistoryContext
+from w3rw.coinbase_pro.context import TransfersContext
+from w3rw.coinbase_pro.context import TransfersAccountsContext
+from w3rw.coinbase_pro.context import PriceContext
+from w3rw.coinbase_pro.context import OrderContext
 
 
 class CoinbaseProClient(AbstractClient):

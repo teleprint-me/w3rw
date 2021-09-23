@@ -13,12 +13,12 @@
 #
 # You should have received a copy of the GNU Affero General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
-from ledger.api.factory import AbstractMessenger
-from ledger.api.factory import AbstractClient
-from ledger.api.factory import AbstractFactory
+from w3rw.factory import AbstractMessenger
+from w3rw.factory import AbstractClient
+from w3rw.factory import AbstractFactory
 
-from ledger.api.cbpro.auth import Auth
-from ledger.api.cbpro.messenger import Messenger
+from w3rw.coinbase.auth import Auth
+from w3rw.coinbase.messenger import Messenger
 
 from time import sleep
 

@@ -13,9 +13,10 @@
 #
 # You should have received a copy of the GNU Affero General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
-from ledger.api.factory import List
-from ledger.api.factory import Response
-from ledger.api.factory import AbstractContext
+from w3rw import List
+from w3rw import Response
+
+from w3rw.factory import AbstractContext
 
 import dataclasses
 import datetime
@@ -23,9 +24,8 @@ import requests
 
 
 def epoch_to_datetime(timestamp: float) -> str:
-    '''convert timestamp from epoch to iso 8601'''
-    date = datetime.datetime.fromtimestamp(timestamp)
-    return date.isoformat()
+    '''Convert timestamp from Epoch to ISO-8601'''
+    return datetime.datetime.fromtimestamp(timestamp).isoformat()
 
 
 @dataclasses.dataclass

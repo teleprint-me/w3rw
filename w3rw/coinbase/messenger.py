@@ -13,40 +13,16 @@
 #
 # You should have received a copy of the GNU Affero General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
-from ledger.api.factory import __timeout__
+from w3rw import __timeout__
+from w3rw import Response
 
-from ledger.api.factory import Response
-
-from ledger.api.factory import AbstractAuth
-from ledger.api.factory import AbstractAPI
-from ledger.api.factory import AbstractQuery
-from ledger.api.factory import AbstractMessenger
+from w3rw.factory import AbstractAuth
+from w3rw.factory import AbstractAPI
+from w3rw.factory import AbstractMessenger
 
 import dataclasses
 import requests
 import time
-
-
-@dataclasses.dataclass
-class Query(AbstractQuery):
-    __endpoint: str
-    __data: dict = dataclasses.field(default_factory=dict)
-
-    @property
-    def endpoint(self) -> str:
-        return self.__endpoint
-
-    @endpoint.setter
-    def endpoint(self, value: str):
-        self.__endpoint = value
-
-    @property
-    def data(self) -> dict:
-        return self.__data
-
-    @data.setter
-    def data(self, value: dict):
-        self.__data = value
 
 
 @dataclasses.dataclass
@@ -94,36 +70,36 @@ class Messenger(AbstractMessenger):
     def session(self) -> requests.Session:
         return self.__session
 
-    def get(self, query: AbstractQuery) -> Response:
+    def get(self, endpoint: str, params: dict = None) -> Response:
         time.sleep(__timeout__)
         return self.session.get(
-            self.api.path(query.endpoint),
-            params=query.data,
+            self.api.path(endpoint),
+            params=params,
             auth=self.auth,
             timeout=self.timeout
         )
 
-    def post(self, query: AbstractQuery) -> Response:
+    def post(self, endpoint: str, json: dict = None) -> Response:
         time.sleep(__timeout__)
         return self.session.post(
-            self.api.path(query.endpoint),
-            json=query.data,
+            self.api.path(endpoint),
+            json=json,
             auth=self.auth,
             timeout=self.timeout
         )
 
-    def page(self, query: AbstractQuery) -> Response:
+    def page(self, endpoint: str, params: dict = None) -> Response:
         # source: https://docs.pro.coinbase.com/?python#pagination
         while True:
-            response = self.get(query)
+            response = self.get(endpoint, params)
             if 200 != response.status_code:
                 return [response]
             yield response
             after = response.headers.get('CB-AFTER')
-            before = query.data.get('before')
+            before = params.get('before')
             if not after or before:
                 break
-            query.data['after'] = response.headers['CB-AFTER']
+            params['after'] = response.headers['CB-AFTER']
 
     def close(self):
         self.session.close()
