@@ -10,25 +10,25 @@ __      _|___ / _ ____      __
 
 ## About
 
-A `requests` wrapper for interfacing with Centralized and Decentralized Cryptocurrency REST API's.
+A wrapper for interfacing with Centralized and Decentralized Cryptocurrency Application Programming Interfaces.
 
 ## Docs
 
-- [Install](https://github.com/teleprint-me/ledger-api/blob/main/docs/Install.md)
+- [Install](https://github.com/teleprint-me/ledger-api/tree/main/docs)
 
     Install the w3rw library
 
-- [ABI Documentation](https://github.com/teleprint-me/ledger-api/tree/main/docs)
+- [ABI](https://github.com/teleprint-me/ledger-api/blob/main/docs/ABI.md)
 
-    The ABI consists of the general design of the overall project. This design defines the general interface for all REST API's within this repository.
+    The ABI consists of the general design which defines the general interface for this repository.
 
-- [Core Documentation](https://github.com/teleprint-me/ledger-api/blob/main/docs/Core.md)
+- [Core](https://github.com/teleprint-me/ledger-api/blob/main/docs/Core.md)
 
-    The Core is the implementation of the ABI which is used to communicate with the intended REST API.
+    The Core is the implementation of the ABI which is used to communicate with the intended interface.
 
-- [Middleware Documentation](https://github.com/teleprint-me/ledger-api/blob/main/docs/Middleware.md)
+- [Middleware](https://github.com/teleprint-me/ledger-api/blob/main/docs/Middleware.md)
 
-    The middleware builds on the Core and consists of a modified REST API for simplifying complicated requests through the use of the Factory Pattern.
+    The middleware builds on the Core and consists of a modified interface for simplifying complicated requests.
 
 ## Tips
 
