@@ -23,7 +23,7 @@ Auth(key: str, secret: str, passphrase: str)
 _Note: This object is passed to the Messenger class as an argument during instantiation. More information can be found below._
 
 ```python
-from ledger.api.kraken.auth import Auth
+from w3rw.kraken.auth import Auth
 
 key = 'My API Key'
 secret = 'My API Secret'
@@ -43,8 +43,8 @@ Messenger(auth: AbstractAuth)
 _Note: This is the class you'll want to use if you're interested in implementing a single REST API._
 
 ```python
-from ledger.api.kraken.auth import Auth
-from ledger.api.kraken.messenger import Messenger
+from w3rw.kraken.auth import Auth
+from w3rw.kraken.messenger import Messenger
 
 key = 'My API Key'
 secret = 'My API Secret'
@@ -71,11 +71,11 @@ Messenger has 4 methods.
 
 ```python
 # Make a GET request
-messenger.get(endpoint: str, params: dict = None) -> Response
+messenger.get(endpoint: str, data: dict = None) -> Response
 # Make a POST request
-messenger.post(endpoint: str, json: dict = None) -> Response
+messenger.post(endpoint: str, data: dict = None) -> Response
 # Paginate a GET request
-messenger.page(endpoint: str, params: dict = None) -> Response
+messenger.page(endpoint: str, data: dict = None) -> Response
 # End the requests session
 messenger.close()
 ```
@@ -83,7 +83,7 @@ messenger.close()
 ### Example
 
 ```python
-from ledger.api.coinbase_pro.client import CoinbaseProFactory
+from w3rw.coinbase_pro.client import CoinbaseProFactory
 
 key = 'My API Key'
 secret = 'My API Secret'
