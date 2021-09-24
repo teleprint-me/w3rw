@@ -70,36 +70,36 @@ class Messenger(AbstractMessenger):
     def session(self) -> requests.Session:
         return self.__session
 
-    def get(self, endpoint: str, params: dict = None) -> Response:
+    def get(self, endpoint: str, data: dict = None) -> Response:
         time.sleep(__timeout__)
         return self.session.get(
             self.api.path(endpoint),
-            params=params,
+            params=data,
             auth=self.auth,
             timeout=self.timeout
         )
 
-    def post(self, endpoint: str, json: dict = None) -> Response:
+    def post(self, endpoint: str, data: dict = None) -> Response:
         time.sleep(__timeout__)
         return self.session.post(
             self.api.path(endpoint),
-            json=json,
+            json=data,
             auth=self.auth,
             timeout=self.timeout
         )
 
-    def page(self, endpoint: str, params: dict = None) -> Response:
+    def page(self, endpoint: str, data: dict = None) -> Response:
         # source: https://docs.pro.coinbase.com/?python#pagination
         while True:
-            response = self.get(endpoint, params)
+            response = self.get(endpoint, data)
             if 200 != response.status_code:
                 return [response]
             yield response
             after = response.headers.get('CB-AFTER')
-            before = params.get('before')
+            before = data.get('before')
             if not after or before:
                 break
-            params['after'] = response.headers['CB-AFTER']
+            data['after'] = response.headers['CB-AFTER']
 
     def close(self):
         self.session.close()

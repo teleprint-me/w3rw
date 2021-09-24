@@ -70,15 +70,15 @@ class AbstractMessenger(abc.ABC):
         pass
 
     @abc.abstractmethod
-    def get(self, endpoint: str, params: dict = None) -> Response:
+    def get(self, endpoint: str, data: dict = None) -> Response:
         pass
 
     @abc.abstractmethod
-    def post(self, endpoint: str, json: dict = None) -> Response:
+    def post(self, endpoint: str, data: dict = None) -> Response:
         pass
 
     @abc.abstractmethod
-    def page(self, endpoint: str, params: dict = None) -> Response:
+    def page(self, endpoint: str, data: dict = None) -> Response:
         pass
 
     @abc.abstractmethod
@@ -147,6 +147,10 @@ class AbstractClient(abc.ABC):
 
 
 class AbstractFactory(abc.ABC):
+    @abc.abstractmethod
+    def __init__(self, key: str = None, secret: str = None):
+        pass
+
     @abc.abstractmethod
     def get_messenger(self) -> AbstractMessenger:
         pass

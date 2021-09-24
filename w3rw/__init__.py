@@ -10,5 +10,5 @@ __limit__: int = 250
 __timeout__: float = 0.275
 
 List = typing.TypeVar('List', list, list[dict])
-Dict = typing.TypeVar('DList', dict, List)
+Dict = typing.TypeVar('Dict', dict, List)
 Response = typing.TypeVar('Response', requests.Response, list[requests.Response])

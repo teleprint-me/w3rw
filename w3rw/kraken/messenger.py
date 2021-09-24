@@ -72,16 +72,16 @@ class Messenger(AbstractMessenger):
     def session(self) -> requests.Session:
         return self.__session
 
-    def get(self, endpoint: str, params: dict = None) -> Response:
+    def get(self, endpoint: str, data: dict = None) -> Response:
         time.sleep(__timeout__)
         endpoint = self.api.endpoint(endpoint)
-        if not params:
-            params = {}
-        params['nonce'] = self.auth.nonce
+        if not data:
+            data = {}
+        data['nonce'] = self.auth.nonce
         return self.session.get(
             self.api.path(endpoint),
-            params=params,
-            headers=self.auth(endpoint, params),
+            params=data,
+            headers=self.auth(endpoint, data),
             timeout=self.timeout
         )
 
