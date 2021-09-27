@@ -148,13 +148,9 @@ class AbstractClient(abc.ABC):
 
 class AbstractFactory(abc.ABC):
     @abc.abstractmethod
-    def __init__(self, key: str = None, secret: str = None):
+    def get_messenger(self, key: str, secret: str) -> AbstractMessenger:
         pass
 
     @abc.abstractmethod
-    def get_messenger(self) -> AbstractMessenger:
-        pass
-
-    @abc.abstractmethod
-    def get_client(self) -> AbstractClient:
+    def get_client(self, key: str, secret: str) -> AbstractClient:
         pass

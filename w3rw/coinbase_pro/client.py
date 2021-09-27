@@ -97,13 +97,13 @@ class CoinbaseProFactory(AbstractFactory):
     def get_messenger(self,
                       key: str,
                       secret: str,
-                      passphrase: str = None) -> AbstractClient:
+                      passphrase: str) -> AbstractClient:
 
         return Messenger(Auth(key, secret, passphrase))
 
     def get_client(self,
                    key: str,
                    secret: str,
-                   passphrase: str = None) -> AbstractClient:
+                   passphrase: str) -> AbstractClient:
 
         return CoinbaseProClient(Messenger(Auth(key, secret, passphrase)))
