@@ -3,7 +3,7 @@ import typing
 
 __agent__: str = 'teleprint.me'
 __source__: str = 'https://github.com/teleprint-me/ledger'
-__version__: str = '0.1.28'
+__version__: str = '0.1.29'
 
 __offset__: int = 50
 __limit__: int = 250
