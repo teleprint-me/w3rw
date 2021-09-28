@@ -79,9 +79,10 @@ class ProductsContext(Context):
         response = self.response.json()
         return [response] if self.error() else [
             {'id': k,
-             'display': v.get('wsname'),
-             'name': v.get('base'),
-             'min-size': v.get('ordermin')
+             'base': v.get('base'),
+             'quote': v.get('quote'),
+             'pair': v.get('wsname'),
+             'min': v.get('ordermin')
              } for k, v in response['result'].items()]
 
 
@@ -90,7 +91,7 @@ class AccountsContext(Context):
     def data(self) -> List:
         response = self.response.json()
         return [response] if self.error() else [
-            {'name': k,
+            {'base': k,
              'balance': v
              } for k, v in response['result'].items() if float(v) > 0]
 
@@ -111,10 +112,10 @@ class HistoryContext(PageContext):
 class TransfersContext(PageContext):
     def get(self, data: dict) -> object:
         for transfer in data['result']['ledger'].values():
-            if transfer['asset'] == self.id.split('Z')[0]:
+            if transfer['asset'] in self.id:
                 yield {
-                    'name': transfer['asset'],
                     'type': transfer['type'],
+                    'base': transfer['asset'],
                     'amount': transfer['amount'],
                     'fee': transfer['fee'],
                     'timestamp': epoch_to_datetime(transfer['time'])

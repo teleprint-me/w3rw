@@ -69,9 +69,10 @@ class ProductsContext(Context):
         response = self.response.json()
         return response if self.error() else [
             {'id': item.get('id'),
-             'display': item.get('display_name'),
-             'name': item.get('base_currency'),
-             'min-size': item.get('min_market_funds')
+             'base': item.get('base_currency'),
+             'quote': item.get('quote_currency'),
+             'pair': item.get('display_name'),
+             'min': item.get('min_market_funds')
              } for item in response]
 
 
@@ -80,7 +81,7 @@ class AccountsBalanceContext(Context):
     def data(self) -> List:
         response = self.response.json()
         return response if self.error() else [
-            {'name': item.get('currency'),
+            {'base': item.get('currency'),
              'balance': item.get('available')
              } for item in response if float(item.get('available')) > 0]
 
@@ -91,7 +92,7 @@ class AccountsIdentityContext(Context):
         response = self.response.json()
         return response if self.error() else [
             {'id': item.get('id'),
-             'name': item.get('currency')
+             'base': item.get('currency')
              } for item in response
             if item.get('currency') in self.id.split('-')[0]]
 
@@ -142,7 +143,7 @@ class TransfersAccountsContext(object):
                 if self.match(account, transfer):
                     collection.append({
                         'type': transfer.get('type'),
-                        'name': account.get('name'),
+                        'base': account.get('base'),
                         'amount': transfer.get('amount'),
                         'fee': self.fee(transfer),
                         'timestamp': transfer.get('timestamp')
