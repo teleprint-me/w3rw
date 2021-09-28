@@ -14,6 +14,7 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 from w3rw import __timeout__
+from w3rw import __offset__
 from w3rw import Response
 
 from w3rw.factory import AbstractAuth
@@ -89,17 +90,21 @@ class Messenger(AbstractMessenger):
         )
 
     def page(self, endpoint: str, data: dict = None) -> Response:
-        # source: https://docs.pro.coinbase.com/?python#pagination
+        responses = []
+        if not data:
+            data = {'limit': __offset__}
         while True:
             response = self.get(endpoint, data)
             if 200 != response.status_code:
                 return [response]
-            yield response
-            after = response.headers.get('CB-AFTER')
-            before = data.get('before')
-            if not after or before:
+            if not response.json():
                 break
-            data['after'] = response.headers['CB-AFTER']
+            responses.append(response)
+            page = response.json()['pagination']
+            if not page['next_uri']:
+                break
+            data['starting_after'] = page['next_starting_after']
+        return responses
 
     def close(self):
         self.session.close()
