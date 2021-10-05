@@ -1,43 +1,50 @@
-# Install
+# Overview
+
+The library is broken down by type and interface.
+
+```sh
+$ tree -d w3rw
+w3rw
+├── cex
+│   ├── coinbase
+│   ├── coinbase_pro
+│   └── kraken
+├── dex
+└── wallet
+
+6 directories
+```
+
+- An example of type would be a Centralized Exchange, or CEx for short.
+- An example of interface would be Coinbase Pro.
+
+Just import based on the exchange you're interested in implementing.
+
+```python
+from w3rw.cex.coinbase.messenger import Auth
+from w3rw.cex.coinbase.messenger import Messenger
+messenger = Messenger(Auth(key, secret)
+```
+
+You can find more information in the docs which is sectioned by module.
+
+```sh
+$ tree -d docs
+docs
+├── coinbase
+├── coinbase_pro
+└── kraken
+
+3 directories
+```
 
 ## Notes
 
-- This library is a work in progress and is subject to change. 
-- There may be aspects of this library that are broken, buggy, or missing from the implementation.
-- There is NO WARRANTY, MERCHANTABILITY, or FITNESS FOR A PARTICULAR PURPOSE.
+### Docs
+- Will be implemented on a per module basis.
+- Will only be available for currently existing code.
 
-
-## Consumers
-
-```sh
-mkdir /my/project/path 
-cd /my/project/path
-virtualenv venv 
-source venv/bin/activate
-pip install git+https://github.com/teleprint-me/w3rw.git#egg=w3rw
-```
-
-## Manual
-
-```sh
-mkdir /my/project/path
-git clone https://github.com/teleprint-me/w3rw.git /my/project/path/w3rw
-cd /my/project/path
-virtualenv venv 
-source venv/bin/activate
-cd /my/project/path/w3rw
-python setup.py install
-```
-
-## Developers
-
-```sh
-git clone https://github.com/teleprint-me/w3rw.git /my/project/path/w3rw
-cd /my/project/path/w3rw
-virtualenv venv 
-source venv/bin/activate
-pip install -r requirements-dev.txt
-touch settings.ini main.py
-```
-
-_Note: A [GPG Signature](https://docs.github.com/en/authentication/managing-commit-signature-verification) is required to make a Pull Request._
+### Coinbase Exchange
+- Clients will want to use the `coinbase_pro` module. 
+- Pro and Exchange are nearly identical interfaces and only require you to modify the API URL. 
+- More information can be found in the docs.
