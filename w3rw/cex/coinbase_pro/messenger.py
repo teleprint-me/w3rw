@@ -1,4 +1,4 @@
-# w3rw - Web3 Requests Wrapper for Cryptocurrency Exchanges
+# w3rw - A Wrapper for Cryptocurrency Interfaces
 # Copyright (C) 2021 teleprint.me
 #
 # This program is free software: you can redistribute it and/or modify

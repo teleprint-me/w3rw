@@ -1,4 +1,4 @@
-# Ledger - A web application to track cryptocurrency investments
+# w3rw - A Wrapper for Cryptocurrency Interfaces
 # Copyright (C) 2021 teleprint.me
 #
 # This program is free software: you can redistribute it and/or modify
