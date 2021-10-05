@@ -37,6 +37,7 @@ A wrapper for interfacing with Centralized and Decentralized Cryptocurrency Inte
 
 - [ ] 1inch
 - [ ] Uniswap
+- [ ] Quickswap
 - [ ] Compound
 
 ### Wallets
