@@ -13,18 +13,25 @@
 #
 # You should have received a copy of the GNU Affero General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
+from w3rw import __agent__
+from w3rw import __source__
+from w3rw import __version__
 from w3rw import __offset__
 from w3rw import __limit__
 from w3rw import __timeout__
 from w3rw import Response
 
-from w3rw.factory import AbstractAuth
-from w3rw.factory import AbstractAPI
-from w3rw.factory import AbstractMessenger
+from w3rw.cex.kraken.abstract import AbstractAPI
+from w3rw.cex.kraken.abstract import AbstractAuth
+from w3rw.cex.kraken.abstract import AbstractMessenger
 
+import base64
 import dataclasses
+import hashlib
+import hmac
 import requests
 import time
+import urllib
 
 
 @dataclasses.dataclass
@@ -47,6 +54,32 @@ class API(AbstractAPI):
 
     def path(self, value: str) -> str:
         return f'{self.url}/{self.endpoint(value).lstrip("/")}'
+
+
+class Auth(AbstractAuth):
+    def __init__(self, key: str, secret: str):
+        self.__key = key
+        self.__secret = secret
+
+    def __call__(self, endpoint: str, data: dict) -> dict:
+        return {
+            'User-Agent': f'{__agent__}/{__version__} {__source__}',
+            'API-Key': self.__key,
+            'API-Sign': self.signature(endpoint, data)
+        }
+
+    @property
+    def nonce(self) -> str:
+        return str(int(1000 * time.time()))
+
+    def signature(self, endpoint: str, data: dict) -> bytes:
+        key = base64.b64decode(self.__secret)
+        post = urllib.parse.urlencode(data)
+        encoded = (str(data['nonce']) + post).encode()
+        message = endpoint.encode() + hashlib.sha256(encoded).digest()
+        mac = hmac.new(key, message, hashlib.sha512)
+        signature = base64.b64encode(mac.digest())
+        return signature.decode()
 
 
 class Messenger(AbstractMessenger):

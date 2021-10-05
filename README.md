@@ -10,25 +10,13 @@ __      _|___ / _ ____      __
 
 ## About
 
-A wrapper for interfacing with Centralized and Decentralized Cryptocurrency Application Programming Interfaces.
+A wrapper for interfacing with Centralized and Decentralized Cryptocurrency Interfaces
 
 ## Docs
 
-- [Install](https://github.com/teleprint-me/ledger-api/tree/main/docs)
+- [Documentation](https://github.com/teleprint-me/ledger-api/tree/main/docs)
 
-    Install the w3rw library
-
-- [ABI](https://github.com/teleprint-me/ledger-api/blob/main/docs/ABI.md)
-
-    The ABI consists of the general design which defines the general interface for this repository.
-
-- [Core](https://github.com/teleprint-me/ledger-api/blob/main/docs/Core.md)
-
-    The Core is the implementation of the ABI which is used to communicate with the intended interface.
-
-- [Middleware](https://github.com/teleprint-me/ledger-api/blob/main/docs/Middleware.md)
-
-    The middleware builds on the Core and consists of a modified interface for simplifying complicated requests.
+    Install the w3rw library and learn how it works
 
 ## Tips
 
@@ -40,16 +28,16 @@ A wrapper for interfacing with Centralized and Decentralized Cryptocurrency Appl
 
 ### Documentation
 
-- [ ] ABI
-- [ ] Core
-- [ ] Middleware
+- [x] Setup
+- [ ] Coinbase
+- [ ] Coinbase Pro
+- [ ] Kraken
 
 ### Centralized Exchanges
 
-- [ ] Coinbase
+- [x] Coinbase
 - [x] Coinbase Pro
 - [x] Kraken
-- [ ] Gemini
 
 ### Dencentralized Exchanges
 
@@ -62,9 +50,3 @@ A wrapper for interfacing with Centralized and Decentralized Cryptocurrency Appl
 - [ ] Coinbase Wallet
 - [ ] Metamask Wallet
 - [ ] Ledger Wallet
-
-### Tests
-
-#### A Note on Testing
-
-There is no method to gaurentee testing. Only a guarentee to verify code integrity. Testing these API's is difficult seeing as some do not support a sandbox for testing. The major pitfall to this is that exploratory testing is required to verify that the code is functioning as intended. This makes bugs difficult to pinpoint. If testing is implemented at any point in time, then it should be implemented to verify the structure of the code instead.

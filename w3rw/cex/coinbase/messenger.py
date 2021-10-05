@@ -13,15 +13,23 @@
 #
 # You should have received a copy of the GNU Affero General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
+from w3rw import __agent__
+from w3rw import __source__
+from w3rw import __version__
 from w3rw import __timeout__
 from w3rw import __offset__
 from w3rw import Response
 
-from w3rw.factory import AbstractAuth
-from w3rw.factory import AbstractAPI
-from w3rw.factory import AbstractMessenger
+from w3rw.cex.coinbase.abstract import AbstractAPI
+from w3rw.cex.coinbase.abstract import AbstractAuth
+from w3rw.cex.coinbase.abstract import AbstractMessenger
+
+from requests.auth import AuthBase
+from requests.models import PreparedRequest
 
 import dataclasses
+import hmac
+import hashlib
 import requests
 import time
 
@@ -46,6 +54,34 @@ class API(AbstractAPI):
 
     def path(self, value: str) -> str:
         return f'{self.url}/{self.endpoint(value).lstrip("/")}'
+
+
+class Auth(AbstractAuth, AuthBase):
+    def __init__(self, key: str, secret: str):
+        self.__key = key
+        self.__secret = secret
+
+    def __call__(self, request: PreparedRequest) -> PreparedRequest:
+        timestamp = str(int(time.time()))
+        body = '' if request.body is None else request.body.decode('utf-8')
+        message = f'{timestamp}{request.method.upper()}{request.path_url}{body}'
+        headers = self.headers(timestamp, message)
+        request.headers.update(headers)
+        return request
+
+    def signature(self, message: str) -> str:
+        key = self.__secret.encode('ascii')
+        msg = message.encode('ascii')
+        return hmac.new(key, msg, hashlib.sha256).hexdigest()
+
+    def headers(self, timestamp: str, message: str) -> dict:
+        return {
+            'User-Agent': f'{__agent__}/{__version__} {__source__}',
+            'CB-ACCESS-KEY': self.__key,
+            'CB-ACCESS-SIGN': self.signature(message),
+            'CB-ACCESS-TIMESTAMP': timestamp,
+            'Content-Type': 'application/json'
+        }
 
 
 class Messenger(AbstractMessenger):

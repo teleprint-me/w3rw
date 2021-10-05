@@ -2,7 +2,6 @@
 
 ## Notes
 
-- This library is intentionally minimalist and targets only REST API's.
 - This library is a work in progress and is subject to change. 
 - There may be aspects of this library that are broken, buggy, or missing from the implementation.
 - There is NO WARRANTY, MERCHANTABILITY, or FITNESS FOR A PARTICULAR PURPOSE.
@@ -15,14 +14,14 @@ mkdir /my/project/path
 cd /my/project/path
 virtualenv venv 
 source venv/bin/activate
-pip install git+https://github.com/teleprint-me/ledger-api.git#egg=w3rw
+pip install git+https://github.com/teleprint-me/w3rw.git#egg=w3rw
 ```
 
 ## Manual
 
 ```sh
 mkdir /my/project/path
-git clone https://github.com/teleprint-me/ledger-api.git /my/project/path/w3rw
+git clone https://github.com/teleprint-me/w3rw.git /my/project/path/w3rw
 cd /my/project/path
 virtualenv venv 
 source venv/bin/activate
@@ -33,7 +32,7 @@ python setup.py install
 ## Developers
 
 ```sh
-git clone https://github.com/teleprint-me/ledger-api.git /my/project/path/w3rw
+git clone https://github.com/teleprint-me/w3rw.git /my/project/path/w3rw
 cd /my/project/path/w3rw
 virtualenv venv 
 source venv/bin/activate

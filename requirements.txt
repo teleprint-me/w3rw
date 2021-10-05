@@ -1,2 +1,4 @@
+python-dateutil
 requests
+websocket-client
 web3
