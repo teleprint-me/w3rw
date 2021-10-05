@@ -26,17 +26,11 @@ A wrapper for interfacing with Centralized and Decentralized Cryptocurrency Inte
 
 ## TODO
 
-### Documentation
-
-- [x] Setup
-- [ ] Coinbase
-- [ ] Coinbase Pro
-- [ ] Kraken
-
 ### Centralized Exchanges
 
 - [x] Coinbase
 - [x] Coinbase Pro
+- [x] Coinbase Exchange
 - [x] Kraken
 
 ### Dencentralized Exchanges
@@ -50,3 +44,11 @@ A wrapper for interfacing with Centralized and Decentralized Cryptocurrency Inte
 - [ ] Coinbase Wallet
 - [ ] Metamask Wallet
 - [ ] Ledger Wallet
+
+### Documentation
+
+- [x] Setup
+- [ ] Coinbase
+- [ ] Coinbase Pro
+- [ ] Coinbase Exchange
+- [ ] Kraken
