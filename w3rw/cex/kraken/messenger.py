@@ -47,6 +47,10 @@ class API(AbstractAPI):
     def url(self) -> str:
         return self.__url
 
+    @url.setter
+    def url(self, value: str):
+        self.__url = value
+
     def endpoint(self, value: str) -> str:
         if value.startswith(f'/{self.version}'):
             return value
