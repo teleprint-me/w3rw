@@ -108,3 +108,11 @@ class AbstractClient(abc.ABC):
     @abc.abstractmethod
     def __init__(self, messenger: AbstractMessenger):
         pass
+
+    @abc.abstractproperty
+    def label(self) -> str:
+        pass
+
+    @abc.abstractproperty
+    def messenger(self) -> AbstractMessenger:
+        pass

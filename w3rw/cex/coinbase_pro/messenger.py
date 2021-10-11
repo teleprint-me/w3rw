@@ -61,10 +61,14 @@ class API(AbstractAPI):
 
 
 class Auth(AbstractAuth, AuthBase):
-    def __init__(self, key: str, secret: str, passphrase: str):
-        self.__key = key
-        self.__secret = secret
-        self.__passphrase = passphrase
+    def __init__(self,
+                 key: str = None,
+                 secret: str = None,
+                 passphrase: str = None):
+
+        self.__key = key if key else ''
+        self.__secret = secret if secret else ''
+        self.__passphrase = passphrase if passphrase else ''
 
     def __call__(self, request: PreparedRequest) -> PreparedRequest:
         timestamp = str(time.time())

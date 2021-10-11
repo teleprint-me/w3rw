@@ -23,14 +23,15 @@ from w3rw import Response
 from w3rw.cex.abstract import AbstractAPI
 from w3rw.cex.abstract import AbstractAuth
 from w3rw.cex.abstract import AbstractMessenger
+from w3rw.cex.abstract import AbstractSubscriber
 
+from requests import Session
 from requests.auth import AuthBase
 from requests.models import PreparedRequest
 
 import dataclasses
 import hmac
 import hashlib
-import requests
 import time
 
 
@@ -61,7 +62,7 @@ class API(AbstractAPI):
 
 
 class Auth(AbstractAuth, AuthBase):
-    def __init__(self, key: str, secret: str):
+    def __init__(self, key: str = None, secret: str = None):
         self.__key = key
         self.__secret = secret
 
@@ -92,7 +93,7 @@ class Messenger(AbstractMessenger):
     def __init__(self, auth: AbstractAuth):
         self.__auth: AbstractAuth = auth
         self.__api: AbstractAPI = API()
-        self.__session: requests.Session = requests.Session()
+        self.__session: Session = Session()
         self.__timeout: int = 30
 
     @property
@@ -108,7 +109,7 @@ class Messenger(AbstractMessenger):
         return self.__timeout
 
     @property
-    def session(self) -> requests.Session:
+    def session(self) -> Session:
         return self.__session
 
     def get(self, endpoint: str, data: dict = None) -> Response:
@@ -148,3 +149,15 @@ class Messenger(AbstractMessenger):
 
     def close(self):
         self.session.close()
+
+
+class Subscriber(AbstractSubscriber):
+    def __init__(self, messenger: AbstractMessenger):
+        self.__messenger = messenger
+
+    @property
+    def messenger(self) -> AbstractMessenger:
+        return self.__messenger
+
+    def error(self, response: Response) -> bool:
+        return 200 != response.status_code

@@ -24,6 +24,7 @@ from w3rw import Response
 from w3rw.cex.abstract import AbstractAPI
 from w3rw.cex.abstract import AbstractAuth
 from w3rw.cex.abstract import AbstractMessenger
+from w3rw.cex.abstract import AbstractSubscriber
 
 import base64
 import dataclasses
@@ -61,7 +62,7 @@ class API(AbstractAPI):
 
 
 class Auth(AbstractAuth):
-    def __init__(self, key: str, secret: str):
+    def __init__(self, key: str = None, secret: str = None):
         self.__key = key
         self.__secret = secret
 
@@ -154,3 +155,15 @@ class Messenger(AbstractMessenger):
 
     def close(self) -> None:
         self.session.close()
+
+
+class Subscriber(AbstractSubscriber):
+    def __init__(self, messenger: AbstractMessenger):
+        self.__messenger = messenger
+
+    @property
+    def messenger(self) -> AbstractMessenger:
+        return self.__messenger
+
+    def error(self, response: requests.Response) -> bool:
+        return not response.json()['error']

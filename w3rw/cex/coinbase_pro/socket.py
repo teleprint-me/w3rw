@@ -35,7 +35,7 @@ def get_message(value: dict = None) -> dict:
     return value
 
 
-class Auth(object):
+class Token(object):
     def __init__(self, key: str, secret: str, passphrase: str):
         self.__key = key
         self.__secret = secret
@@ -61,8 +61,8 @@ class Auth(object):
 
 
 class Stream(object):
-    def __init__(self, auth: Auth = None, url: str = None, trace: bool = False):
-        self.auth: Auth = auth
+    def __init__(self, auth: Token = None, url: str = None, trace: bool = False):
+        self.auth: Token = auth
         self.url: str = url if url else 'wss://ws-feed.pro.coinbase.com'
         self.trace: bool = trace
         self.timeout: int = 30
@@ -72,10 +72,11 @@ class Stream(object):
     def connected(self) -> bool:
         return False if self.socket is None else self.socket.connected
 
-    def connect(self) -> None:
+    def connect(self) -> bool:
         header = None if self.auth is None else self.auth()
         websocket.enableTrace(self.trace)
         self.socket = websocket.create_connection(url=self.url, header=header)
+        return self.connected
 
     def send(self, message: dict) -> None:
         if self.connected:

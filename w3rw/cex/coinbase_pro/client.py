@@ -17,6 +17,7 @@ from w3rw import Dict
 
 from w3rw.cex.abstract import AbstractClient
 
+from w3rw.cex.coinbase_pro.messenger import Auth
 from w3rw.cex.coinbase_pro.messenger import Messenger
 from w3rw.cex.coinbase_pro.messenger import Subscriber
 
@@ -186,12 +187,14 @@ class User(Subscriber):
 
 class Time(Subscriber):
     def get(self) -> Dict:
-        # NOTE: The epoch field represents decimal seconds since Unix Epoch
+        # NOTE: The `epoch` field represents decimal seconds since Unix Epoch
         return self.messenger.get('/time').json()
 
 
 class Client(AbstractClient):
     def __init__(self, messenger: Messenger):
+        self.__messenger = messenger
+
         self.account = Account(messenger)
         self.coinbase = Coinbase(messenger)
         self.convert = Convert(messenger)
@@ -204,3 +207,25 @@ class Client(AbstractClient):
         self.report = Report(messenger)
         self.user = User(messenger)
         self.time = Time(messenger)
+
+    @property
+    def label(self):
+        return 'coinbase_pro'
+
+    @property
+    def messenger(self):
+        return self.__messenger
+
+
+def get_messenger(key: str = None,
+                  secret: str = None,
+                  passphrase: str = None) -> Messenger:
+
+    return Messenger(Auth(key, secret, passphrase))
+
+
+def get_client(key: str = None,
+               secret: str = None,
+               passphrase: str = None) -> Client:
+
+    return Client(Messenger(Auth(key, secret, passphrase)))
