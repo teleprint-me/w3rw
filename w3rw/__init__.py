@@ -18,7 +18,7 @@ import typing
 
 __agent__: str = 'w3rw'
 __source__: str = 'https://github.com/teleprint-me/w3rw'
-__version__: str = '0.2.5'
+__version__: str = '0.2.6'
 
 __offset__: int = 50
 __limit__: int = 250
