@@ -19,10 +19,10 @@ from w3rw import __version__
 from w3rw import __timeout__
 from w3rw import Response
 
-from w3rw.cex.coinbase_pro.abstract import AbstractAPI
-from w3rw.cex.coinbase_pro.abstract import AbstractAuth
-from w3rw.cex.coinbase_pro.abstract import AbstractMessenger
-from w3rw.cex.coinbase_pro.abstract import AbstractSubscriber
+from w3rw.cex.abstract import AbstractAPI
+from w3rw.cex.abstract import AbstractAuth
+from w3rw.cex.abstract import AbstractMessenger
+from w3rw.cex.abstract import AbstractSubscriber
 
 from requests.auth import AuthBase
 from requests.models import PreparedRequest

@@ -15,8 +15,9 @@
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 from w3rw import Response
 
+from requests import Session
+
 import abc
-import requests
 
 
 class AbstractAPI(abc.ABC):
@@ -39,19 +40,15 @@ class AbstractAPI(abc.ABC):
 
 class AbstractAuth(abc.ABC):
     @abc.abstractmethod
-    def __init__(self, key: str, secret: str):
+    def __init__(self, key: str = None, secret: str = None):
         pass
 
     @abc.abstractmethod
-    def __call__(self, endpoint: str, data: dict) -> dict:
-        pass
-
-    @abc.abstractproperty
-    def nonce(self) -> str:
+    def __call__(self) -> object:
         pass
 
     @abc.abstractmethod
-    def signature(self, endpoint: str, data: dict) -> bytes:
+    def signature(self) -> object:
         pass
 
 
@@ -69,7 +66,7 @@ class AbstractMessenger(abc.ABC):
         pass
 
     @abc.abstractproperty
-    def session(self) -> requests.Session:
+    def session(self) -> Session:
         pass
 
     @abc.abstractproperty
@@ -103,7 +100,7 @@ class AbstractSubscriber(abc.ABC):
         pass
 
     @abc.abstractmethod
-    def error(self, response: requests.Response) -> bool:
+    def error(self, response: Response) -> bool:
         pass
 
 

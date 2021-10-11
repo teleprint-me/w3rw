@@ -15,7 +15,7 @@
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 from w3rw import Dict
 
-from w3rw.cex.coinbase_pro.abstract import AbstractClient
+from w3rw.cex.abstract import AbstractClient
 
 from w3rw.cex.coinbase_pro.messenger import Messenger
 from w3rw.cex.coinbase_pro.messenger import Subscriber

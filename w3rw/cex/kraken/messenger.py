@@ -21,9 +21,9 @@ from w3rw import __limit__
 from w3rw import __timeout__
 from w3rw import Response
 
-from w3rw.cex.kraken.abstract import AbstractAPI
-from w3rw.cex.kraken.abstract import AbstractAuth
-from w3rw.cex.kraken.abstract import AbstractMessenger
+from w3rw.cex.abstract import AbstractAPI
+from w3rw.cex.abstract import AbstractAuth
+from w3rw.cex.abstract import AbstractMessenger
 
 import base64
 import dataclasses
